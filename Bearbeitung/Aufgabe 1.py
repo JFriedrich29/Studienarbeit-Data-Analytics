@@ -1,5 +1,3 @@
-# To add a new cell, type '# %%'
-# To add a new markdown cell, type '# %% [markdown]'
 # %%
 import numpy as np
 import pandas as pd
@@ -7,7 +5,10 @@ import requests
 import matplotlib.pyplot as plt
 import json
 
-
+# %% [markdown]
+# ### Aufgabe 1 (Messstationen, Datenakquise, Semistrukturierte Daten, Geovisualisierung)
+# %% [markdown]
+# #### a)
 # %%
 response = requests.get('https://www.umweltbundesamt.de/api/air_data/v2/meta/json',
                         params={'use': 'measure', 'date_from': '2020-01-01'})
@@ -18,13 +19,12 @@ json_data = json.loads(response.text)
 
 # %%
 
-
 def printjson(json):
     print(json.dumps(json, indent=3))
 
 
 # %% [markdown]
-# ### Meta Data in Python Object (dictionary) format since 01.01.2020
+# ##### Meta Data in Python Object (dictionary) format since 01.01.2020
 # %%
 stations_dict = json_data['stations']
 components_dict = json_data['components']
@@ -35,7 +35,7 @@ networks_dict = json_data['networks']
 limits_dict = json_data['limits']
 
 # %% [markdown]
-# ### Parse into custom column names
+# ##### Parse into custom column names
 # %%
 df_stations = pd.DataFrame.from_dict(stations_dict,
                                      orient="index",
@@ -54,5 +54,5 @@ df_stations
 # df_stations[["Code"]]
 # df_stations.head()
 # %% [markdown]
-# ### Export to excel
+# ##### Export to excel
 df_stations.to_excel("Stations.xlsx")
