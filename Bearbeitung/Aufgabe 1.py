@@ -109,6 +109,7 @@ m
 # %% [markdown]
 # #### e)  Erzeugen Sie durch Filterung des DataFramesstationseinen DataFramestations_BY, der die Informationen zu allen Messstationen in Bayern enthält.
 # %%
-stations_BY = df_stations[df_stations['Network_ID'] == "2"]
+# stations_BY = df_stations[df_stations['Network_ID'] == "2"]
+stations_BY = df_stations[df_stations['Network_Name'] == "Bavaria"]
 # stations_BY.to_excel("Stations_BY.xlsx") #TODO Auskommentieren für Abgabe
 # %%
