@@ -40,7 +40,7 @@ limits_dict = json_data['limits']
 df_stations = pd.DataFrame.from_dict(stations_dict,
                                      orient="index",
                                      columns=["ID", "Code", "Name", "Location", "x2", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
-                                              "Netword_ID", "Settings_ID", "Type_ID", "Netowrk_Code", "Network_Name", "Settings_Long",
+                                              "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name", "Settings_Long",
                                               "Seeings_Short", "Type", "Street_Name", "Street_Number", "x6"],
                                      )
 df_stations.head(10)
@@ -56,3 +56,10 @@ df_stations
 # %% [markdown]
 # ### Export to excel
 df_stations.to_excel("Stations.xlsx")
+
+
+
+# %%
+stations_BY = df_stations[df_stations['Network_ID'] == "2"]
+stations_BY.to_excel("Stations_BY.xlsx")
+# %%
