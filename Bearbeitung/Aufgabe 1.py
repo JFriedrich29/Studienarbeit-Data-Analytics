@@ -40,8 +40,8 @@ limits_dict = json_data['limits']
 df_stations = pd.DataFrame.from_dict(stations_dict,
                                      orient="index",
                                      columns=["ID", "Code", "Name", "Location", "x2", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
-                                              "Netword_ID", "Settings_ID", "Type_ID", "Netowrk_Code", "Network_Name", "Settings_Long",
-                                              "Seeings_Short", "Type", "Street_Name", "Street_Number", "x6"],
+                                              "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name", "Settings_Long",
+                                              "Settings_Short", "Type", "Street_Name", "Street_Number", "x6"],
                                      )
 df_stations.head(10)
 
@@ -53,6 +53,21 @@ df_stations
 # df_stations.shape
 # df_stations[["Code"]]
 # df_stations.head()
+
+# %%
+# Convert to numeric
+conv_to_int_cols = ["Longtitude", "Latitude", "Network_ID", "Settings_ID",
+                    "Type_ID"]
+df_stations[conv_to_int_cols] = df_stations[conv_to_int_cols].apply(
+    pd.to_numeric, errors='coerce', axis=1)
+
+# Convert to datetime
+conv_to_date_cols = ["Construction_Date", "Deconstruction_Date"]
+df_stations[conv_to_date_cols] = df_stations[conv_to_date_cols].apply(
+    pd.to_datetime, errors='coerce', axis=1)
+
+
+df_stations.dtypes
 # %% [markdown]
 # ##### Export to excel
 df_stations.to_excel("Stations.xlsx")
