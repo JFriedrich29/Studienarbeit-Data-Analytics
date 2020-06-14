@@ -1,4 +1,6 @@
 # %%
+import folium.plugins
+import folium
 import numpy as np
 import pandas as pd
 import requests
@@ -16,8 +18,8 @@ print(response.status_code)
 
 json_data = json.loads(response.text)
 
-
 # %%
+
 
 def printjson(json):
     print(json.dumps(json, indent=3))
@@ -70,11 +72,43 @@ df_stations[conv_to_date_cols] = df_stations[conv_to_date_cols].apply(
 df_stations.dtypes
 # %% [markdown]
 # ##### Export to excel
-df_stations.to_excel("Stations.xlsx")
+# df_stations.to_excel("stations_2020.csv") #TODO Auskommentieren für Abgabe
+# df_stations.to_excel("stations.xlsx")  # TODO Delete line #TODO Auskommentieren für Abgabe
 
+# %% [markdown]
+# #### b) Wie viele Messstationen sind derzeit bundesweit in Betrieb?
+# When Deconstruction_Date is null, then station is still active
+len(df_stations.loc[df_stations["Deconstruction_Date"].isnull()])
 
+# %% [markdown]
+# #### c) Visualisieren Sie mit Hilfe eines Kreisdiagramms, wie sich die Stationen hinsichtlich ihresTyps zusammensetzen.
+# %%
+df_stations['Type'].value_counts().plot.pie(figsize=(
+    6, 6), title="Station Types", legend=True)  # TODO Schöneres Diagramm verwenden
 
+# %% [markdown]
+# #### d)  Erstellen Sie mit folium eine interaktive Karte, auf der die einzelnen Messstationen als Kreise eingezeichnet sind. Industrienahe Stationen sollen gelb, verkehrsnahe rot und die Stationen mit Hintergrundbelastung grün eingezeichnet werden. Beim Klick auf die Kreisesollen die Namen der Stationen angezeigt werden.
+# %%
+colors = {"industry": "yellow", "traffic": "red", "background": "green"}
+
+m = folium.Map(
+    location=[50.86, 12.96],
+    zoom_start=13,
+)
+# TODO Umlaute bei Namen werden nicht richtig gerendert
+for i in range(len(df_stations)):
+    folium.Circle(
+        location=df_stations[['Latitude', 'Longtitude']].iloc[i],
+        popup=df_stations['Name'].iloc[i],
+        radius=30,
+        color=colors[df_stations['Type'].iloc[i]]
+    ).add_to(m)
+
+m
+
+# %% [markdown]
+# #### e)  Erzeugen Sie durch Filterung des DataFramesstationseinen DataFramestations_BY, der die Informationen zu allen Messstationen in Bayern enthält.
 # %%
 stations_BY = df_stations[df_stations['Network_ID'] == "2"]
-stations_BY.to_excel("Stations_BY.xlsx")
+# stations_BY.to_excel("Stations_BY.xlsx") #TODO Auskommentieren für Abgabe
 # %%
