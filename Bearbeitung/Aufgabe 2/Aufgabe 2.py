@@ -30,15 +30,14 @@ import json
 # list_to_create = []
 # for station_id in stations_data_dict:
 #     for station_data in stations_data_dict[station_id]:
-#         measurements_for_id = stations_data_dict[station_id][station_data].values(
-#         )
+#         measurements_for_id = stations_data_dict[station_id][station_data].values()
 #         for data_point in measurements_for_id:
 #             datetime = data_point[3]
 #             no2_value = data_point[2]
 #             list_to_create.append([station_id, datetime, no2_value])
-# df_measurements = pd.DataFrame(list_to_create, columns=[
-#                                "STATION_ID", "DT", "NO2"])
-# df_measurements.index.name = 'dp_id'
+# df_measurements = pd.DataFrame(list_to_create,columns=["STATION_ID", "DT", "NO2"])
+# df_measurements.index.name='dp_id'
+#df_measurements = df_measurements.replace(to_replace='24:00:00', value="00:00:00", regex=True)
 
 # # %%
 # # TODO Abspeichern in Chache entfernen
@@ -52,18 +51,21 @@ xls = pd.ExcelFile("NO2_Measurements.xlsx")
 df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
 df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
 df_measurements = df1.append(df2)
-df_measurements
+
 # %% [markdown]
 # #### b) Setzen Sie den dtype der Spalte NO2 auf float und wandeln Sie die Spalte DT in ein DateTime-Format um.
 # %%
 # Convert to numeric
-df_measurements["NO2"] = df_measurements["NO2"].apply(
-    pd.to_numeric, errors='coerce', axis=1)
+# df_measurements["NO2"] = df_measurements["NO2"].apply(
+#     pd.to_numeric, errors='coerce', axis=1)
+df_measurements["NO2"] = pd.to_numeric(df_measurements["NO2"], errors="coerce")
 
 # Convert to datetime
-df_measurements["DT"] = df_measurements["DT"].apply(
-    pd.to_datetime(format='%y-%m-%d'), errors='coerce', axis=1)
+# df_measurements["DT"] = df_measurements["DT"].apply(
+#     pd.to_datetime, errors='coerce', axis=1)
+df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
 
+df_measurements
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
 # %%
@@ -90,3 +92,14 @@ df_measurements.groupby("STATION_ID").apply(lambda x: print(
 
 
 # %%
+df_measurements
+
+#%%
+symbols = df_measurements.groupby(["STATION_ID"])
+for id in symbols.groups:
+    amount_of_data_points = symbols.get_group(435)['STATION_ID'].count()
+    #amount_of_missing_no2_datapoints =
+
+    print(amount_of_data_points)
+df_measurements
+#df_remMissing = df_measurements.dropna(axis=1, thresh=len(df)*0.9)
