@@ -72,8 +72,6 @@ df_RemovedMeasurements = df_measurements.dropna(axis=0, how="any", subset=["NO2"
 difCount = df_measurements.shape[0] - df_RemovedMeasurements.shape[0]
 print("Deleted " + str(difCount) + " rows that had a missing NO2 value")
 
-# %%
-df_measurements.isnull().sum()
 # %% [markdown]
 # #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
 #%%
@@ -81,7 +79,6 @@ symbols_original = df_measurements.groupby("STATION_ID")
 
 df_measurements.groupby("STATION_ID").apply(lambda x: print(
     "NO2 isnull count :" + str(symbols_original.get_group(x)["NO2"].isnull().count()) + " NO2 Count: " + str(x["NO2"].count())))
-
 
 #df_measurements.groupby("STATION_ID").apply(lambda x: print("NO2 isnull count :" + str(x["NO2"].isnull()).sum() + " NO2 Count: " + str(x["NO2"].count())))
 #%%
