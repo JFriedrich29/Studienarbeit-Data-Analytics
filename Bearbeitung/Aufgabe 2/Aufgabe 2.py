@@ -68,9 +68,8 @@ df_measurements["NO2"] = pd.to_numeric(df_measurements["NO2"], errors="coerce")
 # Convert to datetime
 # df_measurements["DT"] = df_measurements["DT"].apply(
 #     pd.to_datetime, errors='coerce', axis=1)
+df_measurements = df_measurements.replace(to_replace='24:00:00', value="00:00:00", regex=True)
 df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
-
-df_measurements
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
 # %%
@@ -109,6 +108,33 @@ df_tresholdFilter = df_measurements.groupby("STATION_ID").filter(
 )
 df_tresholdCleaned = df_measurements.drop(df_tresholdFilter.index)
 df_tresholdCleaned.shape
+
+
+# %% [markdown]
+# #### d)  LÖSUNG JAN: Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
+#%%
+symbols_original = df_measurements.groupby("STATION_ID")
+
+df_measurements.groupby("STATION_ID").apply(lambda x: print(
+    "NO2 isnull count :" + str(symbols_original.get_group(x)["NO2"].isnull().count()) + " NO2 Count: " + str(x["NO2"].count())))
+
+#df_measurements.groupby("STATION_ID").apply(lambda x: print("NO2 isnull count :" + str(x["NO2"].isnull()).sum() + " NO2 Count: " + str(x["NO2"].count())))
+#%%
+symbols_original = df_measurements.groupby("STATION_ID")
+symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
+for id in symbols_original.groups:
+    print(str(id))
+    amount_of_data_points = symbols_original.get_group(id)['STATION_ID'].count()
+    try:
+        amount_of_missing_no2_datapoints = symbols_new.get_group(id)['NO2'].count()
+    except KeyError:
+        print("deleted " + str(amount_of_data_points) + " in " + str(id))
+        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
+    if((amount_of_missing_no2_datapoints/amount_of_data_points)<0.95):
+        print("Removed " + str(amount_of_missing_no2_datapoints) +" from station " + str(id) +". Original data points: " + str(amount_of_data_points))
+        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
+#df_measurements.drop(symbols_original.get_group(id).index, inplace=True)
+
 
 # %% [markdown]
 # #### e)  Für wie viele Stationen enthält der DataFrame data_no2 nun noch Daten?
