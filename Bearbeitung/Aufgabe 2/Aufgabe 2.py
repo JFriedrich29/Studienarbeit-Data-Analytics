@@ -84,13 +84,20 @@ df_measurements.groupby("STATION_ID").apply(lambda x: print(
 #%%
 symbols_original = df_measurements.groupby("STATION_ID")
 symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
-for  id in symbols_original.groups:
+for id in symbols_original.groups:
+    print(str(id))
     amount_of_data_points = symbols_original.get_group(id)['STATION_ID'].count()
     try:
         amount_of_missing_no2_datapoints = symbols_new.get_group(id)['NO2'].count()
     except KeyError:
         print("deleted " + str(amount_of_data_points) + " in " + str(id))
-        df_measurements.drop(symbols_original.get_group(id), inplace=True)
+        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
     if((amount_of_missing_no2_datapoints/amount_of_data_points)<0.95):
         print("Removed " + str(amount_of_missing_no2_datapoints) +" from station " + str(id) +". Original data points: " + str(amount_of_data_points))
-        df_measurements.drop(symbols_original.get_group(id), inplace=True)
+        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
+#df_measurements.drop(symbols_original.get_group(id).index, inplace=True)
+
+
+
+# %%
+
