@@ -101,3 +101,12 @@ for id in symbols_original.groups:
 
 # %%
 
+df_measurements_write_1 = df_measurements[:802284]
+df_measurements_write_2 = df_measurements[802284:]
+with pd.ExcelWriter("Temp_für_3.xlsx")as writer:
+    df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
+    df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
+
+
+
+# %%
