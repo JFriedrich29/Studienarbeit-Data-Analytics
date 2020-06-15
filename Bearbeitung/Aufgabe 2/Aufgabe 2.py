@@ -67,13 +67,26 @@ df_measurements["DT"] = df_measurements["DT"].apply(
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
 # %%
-dfMod = df_measurements.dropna(axis=0, how="any", subset=["NO2"])
-difCount = df_measurements.shape[0] - dfMod.shape[0]
-print("Deletet " + str(difCount) + " rows that had a missing NO2 value")
-df = dfMod
-df
+df_RemovedMeasurements = df_measurements.dropna(axis=0, how="any", subset=["NO2"])
+difCount = df_measurements.shape[0] - df_RemovedMeasurements.shape[0]
+print("Deleted " + str(difCount) + " rows that had a missing NO2 value")
+df_measurements = df_RemovedMeasurements
 
+# %%
+df_measurements.isnull().sum()
 # %% [markdown]
 # #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkte im Auswertezeitraum einen gültigen Messwert enthalten
 # %%
 df_remMissing = df_measurements.dropna(axis=1, thresh=len(df)*0.9)
+#%%
+df_remMissing = df_measurements.groupby("STATION_ID").filter(
+    lambda grp_station: grp_station["NO2"].count() / grp_station["STATION_ID"].count() < 0.95)
+
+df_remMissing
+
+# %%
+df_measurements.groupby("STATION_ID").apply(lambda x: print(
+    "NO2 isnull count :" + str(x["NO2"].isnull().count()) + " NO2 Count: " + str(x["NO2"].count())))
+
+
+# %%
