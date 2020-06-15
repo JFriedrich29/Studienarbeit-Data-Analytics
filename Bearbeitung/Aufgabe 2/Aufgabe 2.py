@@ -27,28 +27,30 @@ import json
 #         break
 
 # %%
-list_to_create = []
-for station_id in stations_data_dict:
-    for station_data in stations_data_dict[station_id]:
-        measurements_for_id = stations_data_dict[station_id][station_data].values()
-        for data_point in measurements_for_id:
-            datetime = data_point[3]
-            no2_value = data_point[2]
-            list_to_create.append([station_id, datetime, no2_value])
-df_measurements = pd.DataFrame(list_to_create,columns=["STATION_ID", "DT", "NO2"])
-df_measurements.index.name='dp_id'
+# list_to_create = []
+# for station_id in stations_data_dict:
+#     for station_data in stations_data_dict[station_id]:
+#         measurements_for_id = stations_data_dict[station_id][station_data].values(
+#         )
+#         for data_point in measurements_for_id:
+#             datetime = data_point[3]
+#             no2_value = data_point[2]
+#             list_to_create.append([station_id, datetime, no2_value])
+# df_measurements = pd.DataFrame(list_to_create, columns=[
+#                                "STATION_ID", "DT", "NO2"])
+# df_measurements.index.name = 'dp_id'
 
+# # %%
+# # TODO Abspeichern in Chache entfernen
+# df_measurements_write_1 = df_measurements[:802284]
+# df_measurements_write_2 = df_measurements[802284:]
+# with pd.ExcelWriter("NO2_Measurements.xlsx")as writer:
+#     df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
+#     df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
 # %%
-# TODO Abspeichern in Chache entfernen
-df_measurements_write_1 = df_measurements[:802284]
-df_measurements_write_2 = df_measurements[802284:]
-with pd.ExcelWriter("NO2_Measurements.xlsx")as writer:
-    df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
-    df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
-#%%
-xls = pd.ExcelFile("NO2_Measurements.xlsx") 
-df1 = pd.read_excel(xls, "NO2_Measurements_1",index_col="dp_id") 
-df2 = pd.read_excel(xls, "NO2_Measurements_2",index_col="dp_id")
+xls = pd.ExcelFile("NO2_Measurements.xlsx")
+df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
+df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
 df_measurements = df1.append(df2)
 df_measurements
 # %% [markdown]
@@ -60,7 +62,7 @@ df_measurements["NO2"] = df_measurements["NO2"].apply(
 
 # Convert to datetime
 df_measurements["DT"] = df_measurements["DT"].apply(
-    pd.to_datetime, errors='coerce', axis=1)
+    pd.to_datetime(format='%y-%m-%d'), errors='coerce', axis=1)
 
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
@@ -72,5 +74,6 @@ df = dfMod
 df
 
 # %% [markdown]
-# #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enth
+# #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkte im Auswertezeitraum einen gültigen Messwert enthalten
 # %%
+df_remMissing = df_measurements.dropna(axis=1, thresh=len(df)*0.9)
