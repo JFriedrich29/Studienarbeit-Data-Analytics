@@ -1,2 +1,5 @@
 Aufgabe 2 Status:
-	Basic Request and sorting
+	a) done
+	b) done
+	c) done
+	d) WIP
