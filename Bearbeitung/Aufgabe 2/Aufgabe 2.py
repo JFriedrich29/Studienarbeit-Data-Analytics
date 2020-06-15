@@ -51,7 +51,12 @@ xls = pd.ExcelFile("NO2_Measurements.xlsx")
 df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
 df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
 df_measurements = df1.append(df2)
+df_measurements = df_measurements.replace(
+    to_replace='24:00:00', value="00:00:00", regex=True)
 
+# %%
+# Backup in memory
+df_backup = df_measurements.copy(deep=True)
 # %% [markdown]
 # #### b) Setzen Sie den dtype der Spalte NO2 auf float und wandeln Sie die Spalte DT in ein DateTime-Format um.
 # %%
@@ -68,12 +73,45 @@ df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
 # %%
-df_RemovedMeasurements = df_measurements.dropna(axis=0, how="any", subset=["NO2"])
-difCount = df_measurements.shape[0] - df_RemovedMeasurements.shape[0]
+df_measurements_nanCleaned = df_measurements.dropna(
+    axis=0, how="any", subset=["NO2"])
+difCount = df_measurements.shape[0] - df_measurements_nanCleaned.shape[0]
 print("Deleted " + str(difCount) + " rows that had a missing NO2 value")
+# df_measurements = df_measurements_nanCleaned # Todo einkommentieren überschreibt das orginale dataframe, müssen wir Hr. Brunner fragen ob wir das weiter verwenden dürfen
+
+# %%
+# Todo Remove shape testing
+df_measurements.isnull().sum()
+df_measurements_nanCleaned.isnull().sum()
+
+# %%
+df_measurements.shape
+df_measurements_nanCleaned.shape
 
 # %% [markdown]
-# #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
+# #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkte im Auswertezeitraum einen gültigen Messwert enthalten
+
+# %%
+# Todo remove group filtering testing
+# df_measurements_nanCleaned.groupby("STATION_ID").apply(lambda grp: grp["NO2"].isnull().sum())
+# df_measurements_grouped = df_measurements.groupby("STATION_ID")
+# df_measurements.groupby("STATION_ID").apply(
+#     lambda grp: print("Station: " + str(grp.name) +
+#     ": Count Nan: " + str(grp["NO2"].isnull().sum()) +
+#     " --- Count all vals: " + str(grp["NO2"].count()))
+#     )
+
+# %%
+#
+df_tresholdFilter = df_measurements.groupby("STATION_ID").filter(
+    lambda grp: grp["NO2"].isnull().sum() / grp["NO2"].count() > 0.05
+)
+df_tresholdCleaned = df_measurements.drop(df_tresholdFilter.index)
+df_tresholdCleaned.shape
+
+
+# %% [markdown]
+# #### d)  LÖSUNG JAN: Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
 #%%
 symbols_original = df_measurements.groupby("STATION_ID")
 
@@ -98,7 +136,8 @@ for id in symbols_original.groups:
 #df_measurements.drop(symbols_original.get_group(id).index, inplace=True)
 
 
-
+# %% [markdown]
+# #### e)  Für wie viele Stationen enthält der DataFrame data_no2 nun noch Daten?
 # %%
 
 df_measurements_write_1 = df_measurements[:802284]
