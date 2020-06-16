@@ -23,8 +23,8 @@ print("Der höchste NO2 Ein-Stunden-Mittelwert wurde an Station " + str(row_with
 # #### b) An welchem Tag im Auswertezeitraum war die durchschnittliche NO2-Konzentration ̈uberalle bayerischen Stationen am höchsten und welchen Wert hatte sie?
 
 #%%
-df_measurements['DT'].resample('D').sum()
-df_measurements
+#df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
+print(df_measurements.dtypes)
 
 
 #%%
