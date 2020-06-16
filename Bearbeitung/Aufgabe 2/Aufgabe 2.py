@@ -139,13 +139,19 @@ for id in symbols_original.groups:
 # %% [markdown]
 # #### e)  Für wie viele Stationen enthält der DataFrame data_no2 nun noch Daten?
 # %%
+len(df_tresholdCleaned["STATION_ID"].unique())
+# %% [markdown]
+# #### f)  Zu welchen der bayerischen Stationen enthält er keine Daten (mehr)? Geben Sie deren IDs und Namen aus.
+# %%
+stations_BY.loc[df_tresholdFilter["STATION_ID"].unique()][["Name"]]
+# Todo e) und f) funktionieren nur so, wenn man df_tresholdFilter verwenden date_from
+
+
+#%% 
+#TODO Schreibt Daten in temp für aufgabe 3
 
 df_measurements_write_1 = df_measurements[:802284]
 df_measurements_write_2 = df_measurements[802284:]
 with pd.ExcelWriter("Temp_für_3.xlsx")as writer:
     df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
     df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
-
-
-
-# %%
