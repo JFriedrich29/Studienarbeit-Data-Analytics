@@ -11,8 +11,8 @@ import json
 # #### a) Laden Sie über die Measurements-API für alle bayerischen Stationen (wie oben ermittelt) die Ein-Stunden-Mittelwerte für die NO2-Konzentrationen für den Zeitraum 01.01.2016 bis 31.12.2019 herunter und überführen Sie diese in einen DataFrame namens data_no2. Dieser soll die Spalten STATION_ID, DT und NO2 besitzen, die die Stations-ID, das Messdatum mit Uhrzeit sowie die gemessene NO2-Konzentration enthalten.
 # %%
 # TODO Auslesen von Chache entfernen
-# stations_BY = pd.read_excel(
-#     "Stations_BY.xlsx", index_col=0)
+stations_BY = pd.read_excel(
+    "Stations_BY.xlsx", index_col=0)
 # stations_BY
 # %%
 # stations_data_dict = dict()
@@ -120,19 +120,19 @@ df_measurements.groupby("STATION_ID").apply(lambda x: print(
 
 #df_measurements.groupby("STATION_ID").apply(lambda x: print("NO2 isnull count :" + str(x["NO2"].isnull()).sum() + " NO2 Count: " + str(x["NO2"].count())))
 #%%
-symbols_original = df_measurements.groupby("STATION_ID")
-symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
-for id in symbols_original.groups:
-    print(str(id))
-    amount_of_data_points = symbols_original.get_group(id)['STATION_ID'].count()
-    try:
-        amount_of_missing_no2_datapoints = symbols_new.get_group(id)['NO2'].count()
-    except KeyError:
-        print("deleted " + str(amount_of_data_points) + " in " + str(id))
-        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
-    if((amount_of_missing_no2_datapoints/amount_of_data_points)<0.95):
-        print("Removed " + str(amount_of_missing_no2_datapoints) +" from station " + str(id) +". Original data points: " + str(amount_of_data_points))
-        df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
+# symbols_original = df_measurements.groupby("STATION_ID")
+# symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
+# for id in symbols_original.groups:
+#     print(str(id))
+#     amount_of_data_points = symbols_original.get_group(id)['STATION_ID'].count()
+#     try:
+#         amount_of_missing_no2_datapoints = symbols_new.get_group(id)['NO2'].count()
+#     except KeyError:
+#         print("deleted " + str(amount_of_data_points) + " in " + str(id))
+#         df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
+#     if((amount_of_missing_no2_datapoints/amount_of_data_points)<0.95):
+#         print("Removed " + str(amount_of_missing_no2_datapoints) +" from station " + str(id) +". Original data points: " + str(amount_of_data_points))
+#         df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
 #df_measurements.drop(symbols_original.get_group(id).index, inplace=True)
 
 
