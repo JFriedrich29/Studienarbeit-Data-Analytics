@@ -41,7 +41,7 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 - [x] a)
 - [x] b)
 - [x] c)
-- [ ] d)
+- [x] d)
 
 ---
 
