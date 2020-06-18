@@ -60,23 +60,30 @@ print(df_measurements_nico.iloc[: 10].to_string(
 # #### d)  Berechnen Sie die Mittelwerte der gemessenen NO2-Konzentrationen  über die einzelnenJahre. Wie haben sich diese zeitlich entwickelt? Unterscheiden Sie dabei auch nach demStations-Typ.
 # %%
 # %%
+# TODO @Jan Wie verstehst du Angabe: Ist das so gemeint, dass man erst nur nach Jahren gruppieren soll und dann nochmal nach Jahren und Typ?
+# Gruppierung nur nach Year
 df_yearMean = df_measurements.groupby(["Year"]).mean()
 df_yearMean
 
+# Gruppierung nur nach Year und Type, dazu ist merge notwendig
 # %%
+df_merge = df_measurements.merge(
+    df_stations[["Type"]], how="left", left_on="STATION_ID", right_index=True)
 
-
+df_YearTypeMean = df_merge.groupby(["Year", "Type"]).mean()[["NO2"]]
 # %%
-# TODO Macht ein PLott hier Sinn, da die Achsen täuschen, wenn der Wert zwischen 22 und 26 liegt?
+# Diagramm zeigt Mittelwert über Jahre gruppiert nach Typ
+# TODO Diagramm schöner machen
+df_YearTypeMean.unstack().plot(kind="bar")
 
-trace = go.Scatter(
-    x=df_yearMean["Year"],
-    y=df_yearMean["NO2"],
-)
+# x = np.array([2, 4, 6, 8, 10])
 
-data = [trace]
-layout = go.Layout(hovermode='closest')
-fig = go.Figure(data=data, layout=layout)
-fig.show()
+# plt.bar(x-0.25, , width=0.5, label='Year')
+# plt.bar(x+0.25, df_YearTypeMean.loc["Type"], width=0.5, label='Type')
+
+# plt.xticks(x, df_YearTypeMean.index)
+# plt.xlabel('Year')
+# plt.ylabel('NO2')
+# plt.legend()
 
 # %%
