@@ -57,7 +57,7 @@ print(df_measurements_nico.iloc[: 10].to_string(
     index=False, columns=["DT", "NO2"]))
 # %%
 
-# #### d)  Berechnen Sie die Mittelwerte der gemessenen NO2-Konzentrationen  über die einzelnenJahre. Wie haben sich diese zeitlich entwickelt? Unterscheiden Sie dabei auch nach demStations-Typ.
+# #### d)  Berechnen Sie die Mittelwerte der gemessenen NO2-Konzentrationen über die einzelnen Jahre. Wie haben sich diese zeitlich entwickelt? Unterscheiden Sie dabei auch nach demStations-Typ.
 # %%
 # %%
 # TODO @Jan Wie verstehst du Angabe: Ist das so gemeint, dass man erst nur nach Jahren gruppieren soll und dann nochmal nach Jahren und Typ?
