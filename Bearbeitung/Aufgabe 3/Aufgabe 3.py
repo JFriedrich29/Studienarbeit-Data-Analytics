@@ -13,8 +13,8 @@ df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
 df_measurements = df1  # .append(df2)
 df_stations = pd.read_excel("Stations_BY.xlsx", index_col="ID")
 
-# %%
-
+# %% [markdown]
+# ### Aufgabe 3 (Explorative Datenanalyse)
 
 # %% [markdown]
 # #### a) Welches ist der in den Jahren 2016-2019 höchste gemessene Ein-Stunden-Mittelwert für NO2? Wann und an welcher Station wurde er gemessen?
