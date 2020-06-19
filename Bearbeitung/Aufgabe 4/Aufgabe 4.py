@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import plotly.graph_objs as go
 # %%
 # TODO Import aus Datei bei zusammenfügen entfernen
 xls = pd.ExcelFile("Temp_für_3.xlsx")
@@ -48,5 +48,6 @@ violations_data_points_yearly = violations_per_station_yearly["NO2"].mean()
 result = violations_data_points_yearly[violations_data_points_yearly > 40]
 result
 # TODO In Result stehen jetzt die Jahre und stationen drin die den Grenzwert von 40μg/m3 überschritten habe, aber es wird noch das Datum des letzten Tages des Jahrs in der Spalte dt angezeigt
-#
+
+
 # %%
