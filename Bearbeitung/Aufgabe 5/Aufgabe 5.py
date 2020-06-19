@@ -76,17 +76,39 @@ df_mean_per_season = df_measurements.groupby(
     ]
 ).mean()[["NO2"]]
 
-# %%
-# df_mean_per_season.unstack().plot(kind="line")
-# df_mean_per_season.unstack().plot(kind="bar")
-#df_mean_per_season.iloc[range(0, 16)]["NO2"]
-#df_mean_per_season.loc[2016, "Spring"]
-# df_mean_per_season.iloc[df_mean_per_season.index.isin(
-#   ["Spring"], level=1)].index
-#df_mean_per_season.unstack().loc[:, (slice(None), 'Spring')]
-df_mean_per_season.index.get_level_values(level=0).unique()
-# %%
 
+# %%
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=df_mean_per_season.index.get_level_values(level=0).unique(),
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
+        ["Spring"], level=1)]["NO2"],
+    mode="lines",
+    name="Spring NO2 Averages"
+))
+fig.add_trace(go.Scatter(
+    x=df_mean_per_season.index.get_level_values(level=0).unique(),
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
+        ["Autumn"], level=1)]["NO2"],
+    mode="lines",
+    name="Autumn NO2 Averages"
+))
+fig.add_trace(go.Scatter(
+    x=df_mean_per_season.index.get_level_values(level=0).unique(),
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
+        ["Summer"], level=1)]["NO2"],
+    mode="lines",
+    name="Summer NO2 Averages"
+))
+fig.add_trace(go.Scatter(
+    x=df_mean_per_season.index.get_level_values(level=0).unique(),
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
+        ["Winter"], level=1)]["NO2"],
+    mode="lines",
+    name="Winter NO2 Averages"
+))
+
+fig.show()
 
 # %% [markdown]
 # #### c) Visualisieren Sie in einem geeigneten Diagramm den Zeitverlauf der Tagesmittel der ge-messenen NO2-Konzentrationen im Beobachtungszeitraum. Lassen sich Trends erkennen?

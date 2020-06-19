@@ -55,7 +55,7 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 ## Aufgabe 5
 
 - [x] a) Jeden Messpunkt eigene Säule ? --> Histogramm erstellen, x-Achse ist kontinuierlich, x werte sind stickoxid Konzentrationen, aufgetragen werden die Häufigkeiten (mit bins). Es wird ermittelt wie häufig die Konzentrationen auftreten. Nur die bayrischen Stationen verwenden
-- [ ] b) Frage: Sind es Tagesmittel (1 datapoint pro Tag) oder die einzelnen Tagesstundenmittel
+- [x] b) Frage: Sind es Tagesmittel (1 datapoint pro Tag) oder die einzelnen Tagesstundenmittel
 - [x] c)
 
 ---
