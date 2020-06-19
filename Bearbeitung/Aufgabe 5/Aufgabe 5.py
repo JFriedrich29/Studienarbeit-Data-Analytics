@@ -88,4 +88,18 @@ df_mean_per_season.index.get_level_values(level=0).unique()
 # %%
 
 
+# %% [markdown]
+# #### c) Visualisieren Sie in einem geeigneten Diagramm den Zeitverlauf der Tagesmittel der ge-messenen NO2-Konzentrationen im Beobachtungszeitraum. Lassen sich Trends erkennen?
+# %%
+df_mean_per_day = df_measurements.groupby(
+    df_measurements["DT"].dt.date).agg({"NO2": "mean"})
+# %%
+fig = px.line(
+    df_mean_per_day,
+    x=df_mean_per_day.index,
+    y=df_mean_per_day["NO2"],
+    title='Mean NO2 per day')
+fig.show()
+
+
 # %%
