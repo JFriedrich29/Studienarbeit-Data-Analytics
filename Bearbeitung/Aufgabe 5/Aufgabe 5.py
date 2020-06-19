@@ -50,5 +50,31 @@ data = [trace]
 fig = go.Figure(data=data, layout=layout)
 fig.show()
 
+# %% [markdown]
+# #### b)  Stellen  Sie  den  jahreszeitlichen  Verlauf  der  gemessenen  NO2-Konzentrationen  in  einemgeeigneten Diagramm dar. Was ist zu beobachten und wie kann dies erkl ̈art werden?
+# %%
+SEASONS = np.array(['Winter', 'Spring', 'Summer', 'Autumn'])
+month = np.arange(12) + 1
+season = SEASONS[(month // 3) % 4]
+def month_to_season(month_int):
+    return season[month_int - 1]
+
+# %%
+df_measurements["Season"] = df_measurements["DT"].map(lambda dt: month_to_season(dt.month))
+
+# %%
+# df_measurements.groupby(month_to_season(df_measurements["DT"].dt.month)).mean()[["NO2"]]
+
+df_mean_per_season = df_measurements.groupby(
+    [
+        df_measurements["DT"].dt.year,
+        month_to_season(df_measurements["DT"].dt.month)
+    ]
+).mean()[["NO2"]]
+
+# %%
+df_mean_per_season.unstack().plot(kind="line")
+df_mean_per_season.unstack().plot(kind="bar")
+
 
 # %%
