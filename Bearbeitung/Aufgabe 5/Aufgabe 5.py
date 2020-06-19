@@ -56,11 +56,15 @@ fig.show()
 SEASONS = np.array(['Winter', 'Spring', 'Summer', 'Autumn'])
 month = np.arange(12) + 1
 season = SEASONS[(month // 3) % 4]
+
+
 def month_to_season(month_int):
     return season[month_int - 1]
 
+
 # %%
-df_measurements["Season"] = df_measurements["DT"].map(lambda dt: month_to_season(dt.month))
+df_measurements["Season"] = df_measurements["DT"].map(
+    lambda dt: month_to_season(dt.month))
 
 # %%
 # df_measurements.groupby(month_to_season(df_measurements["DT"].dt.month)).mean()[["NO2"]]
@@ -73,8 +77,15 @@ df_mean_per_season = df_measurements.groupby(
 ).mean()[["NO2"]]
 
 # %%
-df_mean_per_season.unstack().plot(kind="line")
-df_mean_per_season.unstack().plot(kind="bar")
+# df_mean_per_season.unstack().plot(kind="line")
+# df_mean_per_season.unstack().plot(kind="bar")
+#df_mean_per_season.iloc[range(0, 16)]["NO2"]
+#df_mean_per_season.loc[2016, "Spring"]
+# df_mean_per_season.iloc[df_mean_per_season.index.isin(
+#   ["Spring"], level=1)].index
+#df_mean_per_season.unstack().loc[:, (slice(None), 'Spring')]
+df_mean_per_season.index.get_level_values(level=0).unique()
+# %%
 
 
 # %%
