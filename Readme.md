@@ -47,16 +47,16 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 
 ## Aufgabe 4
 
-- [ ] a) Der Code wie wir die Daten ermittelt haben soll dabei stehen
-- [ ] b)
+- [x] a) Der Code wie wir die Daten ermittelt haben soll dabei stehen
+- [x] b)
 
 ---
 
 ## Aufgabe 5
 
-- [ ] a) Jeden Messpunkt eigene Säule ? --> Histogramm erstellen, x-Achse ist kontinuierlich, x werte sind stickoxid Konzentrationen, aufgetragen werden die Häufigkeiten (mit bins). Es wird ermittelt wie häufig die Konzentrationen auftreten. Nur die bayrischen Stationen verwenden
-- [ ] b)
-- [ ] c)
+- [x] a) Jeden Messpunkt eigene Säule ? --> Histogramm erstellen, x-Achse ist kontinuierlich, x werte sind stickoxid Konzentrationen, aufgetragen werden die Häufigkeiten (mit bins). Es wird ermittelt wie häufig die Konzentrationen auftreten. Nur die bayrischen Stationen verwenden
+- [ ] b) Frage: Sind es Tagesmittel (1 datapoint pro Tag) oder die einzelnen Tagesstundenmittel
+- [x] c)
 
 ---
 

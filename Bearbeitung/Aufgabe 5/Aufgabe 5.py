@@ -56,11 +56,15 @@ fig.show()
 SEASONS = np.array(['Winter', 'Spring', 'Summer', 'Autumn'])
 month = np.arange(12) + 1
 season = SEASONS[(month // 3) % 4]
+
+
 def month_to_season(month_int):
     return season[month_int - 1]
 
+
 # %%
-df_measurements["Season"] = df_measurements["DT"].map(lambda dt: month_to_season(dt.month))
+df_measurements["Season"] = df_measurements["DT"].map(
+    lambda dt: month_to_season(dt.month))
 
 # %%
 # df_measurements.groupby(month_to_season(df_measurements["DT"].dt.month)).mean()[["NO2"]]
@@ -75,6 +79,20 @@ df_mean_per_season = df_measurements.groupby(
 # %%
 df_mean_per_season.unstack().plot(kind="line")
 df_mean_per_season.unstack().plot(kind="bar")
+
+
+# %% [markdown]
+# #### c) Visualisieren Sie in einem geeigneten Diagramm den Zeitverlauf der Tagesmittel der ge-messenen NO2-Konzentrationen im Beobachtungszeitraum. Lassen sich Trends erkennen?
+# %%
+df_mean_per_day = df_measurements.groupby(
+    df_measurements["DT"].dt.date).agg({"NO2": "mean"})
+# %%
+fig = px.line(
+    df_mean_per_day,
+    x=df_mean_per_day.index,
+    y=df_mean_per_day["NO2"],
+    title='Mean NO2 per day')
+fig.show()
 
 
 # %%
