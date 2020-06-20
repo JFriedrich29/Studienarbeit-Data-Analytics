@@ -87,8 +87,7 @@ x_years = df_mean_per_season.index.get_level_values(level=0).unique()
 fig = go.Figure()
 fig.add_trace(go.Scatter(
     x=x_years,
-    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
-        ["Spring"], level=1)]["NO2"],
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(["Spring"], level=1)]["NO2"],
     mode="lines",
     name="Spring NO2 Averages"
 ))
