@@ -67,7 +67,7 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 ## Aufgabe 6
 
 - [x] a)
-- [ ] b)
+- [x] b)
 
 ---
 
