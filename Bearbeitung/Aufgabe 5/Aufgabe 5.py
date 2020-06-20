@@ -78,39 +78,52 @@ df_mean_per_season = df_measurements.groupby(
 
 # %%
 # Alternative zu meinem iloc
-df_mean_per_season.unstack().loc[:, (slice(None), "Spring")].values
-
+#df_mean_per_season.unstack().loc[:, (slice(None), "Spring")].values
+df_mean_per_season.rename_axis(['Year', 'Season'], inplace=True)
 
 # %%
-x_years = df_mean_per_season.index.get_level_values(level=0).unique()
+# TODO level=0 durch string ersetzen
+x_years = df_mean_per_season.index.get_level_values(level="Year").unique()
+
+mean_yearly_values = []
+for year in x_years:
+    mean_yearly_values.append(df_mean_per_season.loc[year].values.mean())
+
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(
     x=x_years,
-    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(["Spring"], level=1)]["NO2"],
+    y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
+        ["Spring"], level='Season')]["NO2"],
     mode="lines",
     name="Spring NO2 Averages"
 ))
 fig.add_trace(go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
-        ["Autumn"], level=1)]["NO2"],
+        ["Autumn"], level='Season')]["NO2"],
     mode="lines",
     name="Autumn NO2 Averages"
 ))
 fig.add_trace(go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
-        ["Summer"], level=1)]["NO2"],
+        ["Summer"], level='Season')]["NO2"],
     mode="lines",
     name="Summer NO2 Averages"
 ))
 fig.add_trace(go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
-        ["Winter"], level=1)]["NO2"],
+        ["Winter"], level='Season')]["NO2"],
     mode="lines",
     name="Winter NO2 Averages"
+))
+fig.add_trace(go.Scatter(
+    x=x_years,
+    y=mean_yearly_values,
+    mode="lines",
+    name="Average yearly NO2 Concentration"
 ))
 
 
