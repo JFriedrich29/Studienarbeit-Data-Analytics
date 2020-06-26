@@ -6,3 +6,6 @@ Umweltbundesamt Air Data APU (2.0.1)
 Stickstoffoxid
 - [1] https://www.hlnug.de/fileadmin/dokumente/luft/faltblaetter/Stickstoffoxid_12Seiten_2017_170606_Web.pdf
 - http://www.klimaretter.info/tipps-klima-lexikon/13184-stickstoffdioxid
+
+Ozone
+- [2] https://www.esrl.noaa.gov/csl/assessments/ozone/2010/twentyquestions/Q2.pdf

@@ -26,7 +26,7 @@ stations_BY = pd.read_excel(
 #     else:
 #         break
 
-# %%
+# %% # TODO evtl einfachere Methode finden
 # list_to_create = []
 # for station_id in stations_data_dict:
 #     for station_data in stations_data_dict[station_id]:
@@ -68,7 +68,8 @@ df_measurements["NO2"] = pd.to_numeric(df_measurements["NO2"], errors="coerce")
 # Convert to datetime
 # df_measurements["DT"] = df_measurements["DT"].apply(
 #     pd.to_datetime, errors='coerce', axis=1)
-df_measurements = df_measurements.replace(to_replace='24:00:00', value="00:00:00", regex=True)
+df_measurements = df_measurements.replace(
+    to_replace='24:00:00', value="00:00:00", regex=True)
 df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
 # %% [markdown]
 # #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
@@ -112,14 +113,14 @@ df_tresholdCleaned.shape
 
 # %% [markdown]
 # #### d)  LÖSUNG JAN: Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
-#%%
+# %%
 symbols_original = df_measurements.groupby("STATION_ID")
 
 df_measurements.groupby("STATION_ID").apply(lambda x: print(
     "NO2 isnull count :" + str(symbols_original.get_group(x)["NO2"].isnull().count()) + " NO2 Count: " + str(x["NO2"].count())))
 
 #df_measurements.groupby("STATION_ID").apply(lambda x: print("NO2 isnull count :" + str(x["NO2"].isnull()).sum() + " NO2 Count: " + str(x["NO2"].count())))
-#%%
+# %%
 # symbols_original = df_measurements.groupby("STATION_ID")
 # symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
 # for id in symbols_original.groups:
@@ -147,8 +148,8 @@ stations_BY.loc[df_tresholdFilter["STATION_ID"].unique()][["Name"]]
 # Todo e) und f) funktionieren nur so, wenn man df_tresholdFilter verwenden date_from
 
 
-#%% 
-#TODO Schreibt Daten in temp für aufgabe 3
+# %%
+# TODO Schreibt Daten in temp für aufgabe 3
 
 df_measurements_write_1 = df_measurements[:802284]
 df_measurements_write_2 = df_measurements[802284:]
