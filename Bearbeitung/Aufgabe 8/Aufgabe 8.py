@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import json
 import plotly.graph_objects as go
 import requests
+import importlib
+import API_Access as api
+
+# %%
+importlib.reload(api)
 
 # %% [markdonw]
 # #### Graphische Analyse der Daten
@@ -16,30 +21,35 @@ import requests
 # #### Hypothesen
 # 1.
 
+# %%
 # TODO Auslesen von Chache entfernen
 stations_BY = pd.read_excel(
     "Stations_BY.xlsx", index_col=0)
-# stations_BY
+
 # %%
-air_pollutants = {"1": "PM10", "2": "CO", "3": "O3", "4": "SO2", "5": "NO2"}
-stations_data_dict = dict()
+date_from = "2020-01-01"
+date_to = "2020-01-01"
+
+df_all_components = pd.DataFrame()
 for station_id in stations_BY.index:
-    for pollutant in air_pollutants:
-        stations_data_dict[station_id]
-    response = requests.get("https://www.umweltbundesamt.de/api/air_data/v2/measures/json",
-                            params={
-                                "date_from": "2016-01-01",
-                                "time_from": "1",
-                                "date_to": "2019-12-31",
-                                "time_to": "24",
-                                "station": str(station_id),
-                                "component": "5",
-                                "scope": "2"
-                            }
-                            )
-    json_data = json.loads(response.text)
-    stations_data_dict[station_id] = json_data['data']
-    if(response.status_code == 200):
-        print(str(station_id) + ": Abfrage fertig")
-    else:
-        break
+    station_data = api.GetMeasurements_MeanPerHour_MultiComponents(
+        station_id=str(station_id),
+        components=["PM10", "CO", "O3", "SO2", "NO2"],
+        date_from=date_from,
+        date_to=date_to)
+    station_data["STATION_ID"] = station_id
+    station_data = station_data.set_index("STATION_ID", append=True).swaplevel()
+
+    df_all_components = pd.concat([df_all_components, station_data])
+
+df_all_components.count()
+# %%
+# TODO Use Get data for single component in earlier tasks
+station_data = api.GetMeasurements_MeanPerHour_MultiComponents(
+    station_id="509",
+    components=["PM10", "CO", "O3", "SO2", "NO2"],
+    date_from="2016-01-01",
+    date_to="2016-01-03")
+
+station_data
+# %%
