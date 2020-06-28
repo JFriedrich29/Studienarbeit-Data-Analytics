@@ -3,19 +3,23 @@ import pandas as pd
 import requests
 import json
 
-base_URL = "https://www.umweltbundesamt.de/api/"
-# Todo Make privat
+
+# Public variables
 components = ["PM10", "CO", "O3", "SO2", "NO2"]
-component_ids = {"PM10": "1", "CO": "2", "O3": "3", "SO2": "4", "NO2": "5"}
+
+# Private module variables
+__base_URL = "https://www.umweltbundesamt.de/api/"
+__component_ids = {"PM10": "1", "CO": "2", "O3": "3", "SO2": "4", "NO2": "5"}
 
 
 def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from, date_to):
-    global base_URL
+    global __base_URL
+    global __component_ids
 
-    component_id = component_ids[component]
+    component_id = __component_ids[component]
     # Make api call
     response = requests.get(
-        base_URL + 'air_data/v2/measures/json',
+        __base_URL + 'air_data/v2/measures/json',
         params={
             'use': 'measure',
             'date_from': date_from,
@@ -64,14 +68,15 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
 
 
 def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_from, date_to):
+
+    # Create empty df with index
     start_time = pd.to_datetime(date_from + ' 00:00:00',
                                 infer_datetime_format=True)
     end_time = pd.to_datetime(date_to + ' 23:00:00',
                               infer_datetime_format=True)
-    df_station_data = pd.DataFrame()
-    df_station_data["DT"] = pd.date_range(start_time, end_time, freq='h')
+    df_station_data = pd.DataFrame(pd.date_range(
+        start_time, end_time, freq='h'), columns=["DT"])
     df_station_data.set_index("DT", inplace=True)
-    df_station_data
 
     for component in components:
         try:
