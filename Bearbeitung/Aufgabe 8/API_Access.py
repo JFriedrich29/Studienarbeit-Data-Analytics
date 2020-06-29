@@ -2,6 +2,7 @@
 import pandas as pd
 import requests
 import json
+import numpy as np
 
 
 # Public variables
@@ -87,7 +88,7 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
                 date_to=date_to)
         except:
             df_station_data.insert(
-                len(df_station_data.columns), component, None)
+                len(df_station_data.columns), component, np.NaN)
             continue
 
         df_station_data = df_station_data.merge(

@@ -74,14 +74,14 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 
 ## Aufgabe 7
 
-- [ ] a)
-- [ ] b)
-- [ ] c)
-- [ ] d)
-- [ ] e)
-- [ ] f)
-- [ ] g)
-- [ ] h)
+- [x] a)
+- [x] b)
+- [x] c)
+- [x] d)
+- [x] e)
+- [x] f)
+- [x] g)
+- [x] h)
 
 ---
 
