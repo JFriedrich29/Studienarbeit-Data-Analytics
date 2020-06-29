@@ -109,3 +109,22 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 ## Vortrag
 
 > __Montag 06.07. oder Dienstag 07.07.__
+
+
+## Fragen
+Frage zur Präsentation:
+Sie haben in der Angabe einen Foliensatz angesprochen. Was genau stellen Sie sich darunter vor? Also eine Powerpoint-Präsentation, in der quasi das gleiche drinsteht wie im Jupyter-Notebook oder doch eine aus dem Notebook generierte Präsentation?
+
+Die zentralen Thesen und Erkenntnisse sollen kompakt dargestellt werden
+Jede Aufgabe kurz darstellen
+
+---
+
+Gliederung ins den Kop des Dokuments
+
+---
+
+Es reicht die Buchstaben der Aufgabenstellung zu referenzieren
+---
+
+Es geht um die Lösung und die Dokumentation der Aufgaben
