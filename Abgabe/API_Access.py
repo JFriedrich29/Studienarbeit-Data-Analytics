@@ -115,15 +115,13 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
         )
         print("Data missing for station: " + station_id)
 
-    else:
-        # Parse to dataframe
+    else:  # Parse to dataframe
         df_single_component = pd.DataFrame.from_dict(
             station_data_dict,
             orient="index",
             columns=["component id", "scope id",
                      component_name, "date end", "index"]
         )
-
         df_single_component.index.rename("DT", inplace=True)
 
     return df_single_component

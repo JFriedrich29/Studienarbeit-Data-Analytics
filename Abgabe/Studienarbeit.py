@@ -12,9 +12,12 @@ import plotly.express as px
 import ipywidgets as widgets
 import sklearn.linear_model as sk
 import sklearn.model_selection as sm
+
+# Custom module
 import API_Access as api
 
 # %%
+# TODO Entfernen für Abgabe
 import importlib
 importlib.reload(api)
 
@@ -27,12 +30,14 @@ importlib.reload(api)
 # Zu Beginn wird sich ein Überblick über die API des Umweltbudesamtes verschaffen.
 # Die API bietet eine Schnittstelle an, um Meta-Daten aller bundesweiten Messtationen zu erhalten.
 # %%
-df_stations = api.GetMetaData_Stations_All(date_from="2020-01-01", date_to="2020-01-01")
+df_stations = api.GetMetaData_Stations_All(
+    date_from="2020-01-01", date_to="2020-01-01")
 df_stations
 
-# %% [markdown]
-# ##### Export to excel
-# df_stations.to_csv("stations_2020.csv") #TODO NOTWENDIG für Abgabe
+# %%
+# TODO NOTWENDIG für Abgabe
+# Export to excel
+# df_stations.to_csv("stations_2020.csv")
 
 # %% [markdown]
 # #### b) Wie viele Messstationen sind derzeit bundesweit in Betrieb?
@@ -117,7 +122,6 @@ for station_id in stations_BY.index:
         component=api.ComponentEnum.NO2,
         date_from="2016-01-01",
         date_to="2019-12-31")
-
 
     # Add the station id as first index for a unique multiindex
     station_data["STATION_ID"] = station_id
@@ -649,7 +653,7 @@ final_fig
 
 # %% [markdown]
 # ### Aufgabe 7
-#region
+# region
 # %% [markdown]
 # #### a) Laden Sie sich die Wetterdaten aus der Dateiwetterdaten.csvin einen DataFrame na-mensdf_weather. Dieser enth ̈alt historische Wetterdaten f ̈ur die Oberpfalz f ̈ur die Jah-re 2016-2019. F ̈ur unsere Analyse ist die SpaltetemperatureMaxrelevant, die die Ta-gesh ̈ochsttemperaturen in Grad Fahrenheit beinhaltet.
 df_weather = pd.read_csv('wetterdaten.csv')
@@ -664,46 +668,32 @@ df_weather['temperatureMax'] = df_weather['temperatureMax'].apply(
 
 # %% [markdown]
 # #### c) Laden Sie ̈uber die Measurements-API f ̈ur die Station in der Nikolaistraße in Weiden dieEin-Stunden-Mittelwerte f ̈ur die Ozon-Konzentrationen f ̈ur den Zeitraum 01.01.2016 bis31.12.2019 herunter und ̈uberf ̈uhren Sie diese in einen DataFrame namensdata_o3. Diesersoll die SpaltenDTundO3besitzen, die das Messdatum mit Uhrzeit (Beginn der Stunde, ̈uber die gemittelt wird) und die gemessene O3-Konzentration enthalten.
-# %%
-# TODO Id wird in Aufgabe 3 berechnet
-id_nikolaistraße = 509
 
 # %%
-response = requests.get('https://www.umweltbundesamt.de/api/air_data/v2/measures/json',
-                        params={'use': 'measure', 'date_from': '2016-01-01', 'date_to': '2019-12-31', 'time_to': '24', 'time_from': '1', 'scope': '2', 'component': '3', 'station': id_nikolaistraße})
-print(response.status_code)
+df_data_o3 = api.GetMeasurements_MeanPerHour_SingleComponent(
+    station_id=str(509),
+    component=api.ComponentEnum.O3,
+    date_from="2016-01-01",
+    date_to="2019-12-31")
 
-json_data = json.loads(response.text)
-
+df_data_o3
 # %%
-data_o3_dict = dict(json_data['data']["509"])
+# Clean Data
+df_data_o3 = df_data_o3.replace(
+    to_replace='24:00:00', value="00:00:00", regex=True)
+df_data_o3.index = pd.to_datetime(df_data_o3.index)
 
-
-# %%
-data_o3_dict
-
-# %%
-data_o3 = pd.DataFrame.from_dict(
-    data_o3_dict, orient="index", columns=["component id", "scope id", "O3", "date end", "index"])
-# %%
-data_o3 = data_o3.replace(to_replace='24:00:00', value="00:00:00", regex=True)
-data_o3.head()
+df_data_o3.drop(['component id', 'scope id', 'date end',
+                 'index'], inplace=True, axis=1)
 
 # %%
-data_o3.index = pd.to_datetime(data_o3.index)
-
-# %%
-data_o3.drop(['component id', 'scope id', 'date end',
-              'index'], inplace=True, axis=1)
-# %%
-data_o3.index.rename("DT")
-
-# %%
-data_o3.to_csv('data_o3.csv')
+# TODO ENTFERNEN für Abgabe
+# df_data_o3.to_csv('data_o3.csv')
+# df_data_o3 = pd.read_csv('data_o3.csv')
 
 # %% [markdown]
 # #### d) Aggregieren Sie die Messwerte, indem Sie die O3-Maximalkonzentrationen pro Tag ermit-teln und diese in einen DataFrame namenso3_data_maxspeichern.
-o3_data_max = data_o3.groupby(data_o3.index.date).max()
+o3_data_max = df_data_o3.groupby(df_data_o3.index.date).max()
 # %% [markdown]
 # #### e) Stellen Sie den zeitlichen Verlauf der aggregierten Tageswerte f ̈ur die Jahre 2016-2019 gra-fisch dar und beschreiben Sie die beobachteten Trends.
 trace = go.Scattergl(
@@ -849,4 +839,4 @@ modelline = go.Scattergl(
 fig.add_trace(modelline)
 fig.show()
 
-#endregion
+# endregion
