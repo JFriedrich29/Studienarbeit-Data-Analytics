@@ -12,6 +12,11 @@ import plotly.express as px
 import ipywidgets as widgets
 import sklearn.linear_model as sk
 import sklearn.model_selection as sm
+import API_Access as api
+
+# %%
+import importlib
+importlib.reload(api)
 
 # %% [markdown]
 # ### Aufgabe 1 (Messstationen, Datenakquise, Semistrukturierte Daten, Geovisualisierung)
@@ -22,68 +27,12 @@ import sklearn.model_selection as sm
 # Zu Beginn wird sich ein Überblick über die API des Umweltbudesamtes verschaffen.
 # Die API bietet eine Schnittstelle an, um Meta-Daten aller bundesweiten Messtationen zu erhalten.
 # %%
-response = requests.get('https://www.umweltbundesamt.de/api/air_data/v2/meta/json',
-                        params={'use': 'measure', 'date_from': '2020-01-01', 'date_to': '2020-01-01'})
-print(response.status_code)
-
-json_data = json.loads(response.text)
-
-# %%
-
-
-def printjson(json):
-    print(json.dumps(json, indent=3))
-
-
-# %% [markdown]
-# ##### Meta Data in Python Object (dictionary) format since 01.01.2020
-# %%
-stations_dict = json_data['stations']
-components_dict = json_data['components']
-scopes_dict = json_data['scopes']
-xref_dict = json_data['xref']
-networks_dict = json_data['networks']
-networks_dict = json_data['networks']
-limits_dict = json_data['limits']
-
-# %% [markdown]
-# ##### Parse into custom column names
-# %%
-df_stations = pd.DataFrame.from_dict(stations_dict,
-                                     orient="index",
-                                     columns=["ID", "Code", "Name", "Location", "x2", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
-                                              "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name", "Settings_Long",
-                                              "Settings_Short", "Type", "Street_Name", "Street_Number", "x6"],
-                                     )
-df_stations.head(10)
-
-# %%
-
-df_stations.set_index('ID', inplace=True)
+df_stations = api.GetMetaData_Stations_All(date_from="2020-01-01", date_to="2020-01-01")
 df_stations
-# %%
-# df_stations.shape
-# df_stations[["Code"]]
-# df_stations.head()
 
-# %%
-# Convert to numeric
-conv_to_int_cols = ["Longtitude", "Latitude", "Network_ID", "Settings_ID",
-                    "Type_ID"]
-df_stations[conv_to_int_cols] = df_stations[conv_to_int_cols].apply(
-    pd.to_numeric, errors='coerce', axis=1)
-
-# Convert to datetime
-conv_to_date_cols = ["Construction_Date", "Deconstruction_Date"]
-df_stations[conv_to_date_cols] = df_stations[conv_to_date_cols].apply(
-    pd.to_datetime, errors='coerce', axis=1)
-
-
-df_stations.dtypes
 # %% [markdown]
 # ##### Export to excel
-# df_stations.to_excel("stations_2020.csv") #TODO Auskommentieren für Abgabe
-# df_stations.to_excel("stations.xlsx")  # TODO Delete line #TODO Auskommentieren für Abgabe
+# df_stations.to_csv("stations_2020.csv") #TODO NOTWENDIG für Abgabe
 
 # %% [markdown]
 # #### b) Wie viele Messstationen sind derzeit bundesweit in Betrieb?
@@ -159,25 +108,31 @@ stations_BY = pd.read_excel(
 # df_measurements.index.name='dp_id'
 # df_measurements = df_measurements.replace(to_replace='24:00:00', value="00:00:00", regex=True)
 
-# # %%
-# # TODO Abspeichern in Chache entfernen
-# df_measurements_write_1 = df_measurements[:802284]
-# df_measurements_write_2 = df_measurements[802284:]
-# with pd.ExcelWriter("NO2_Measurements.xlsx")as writer:
-#     df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
-#     df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
 # %%
-xls = pd.ExcelFile("NO2_Measurements.xlsx")
-df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
-df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
-df_measurements = df1.append(df2)
-df_measurements = df_measurements.replace(
-    to_replace='24:00:00', value="00:00:00", regex=True)
+df_data_no2 = pd.DataFrame()
+for station_id in stations_BY.index:
+
+    station_data = api.GetMeasurements_MeanPerHour_SingleComponent(
+        station_id=str(station_id),
+        component=api.ComponentEnum.NO2,
+        date_from="2016-01-01",
+        date_to="2019-12-31")
+
+
+    # Add the station id as first index for a unique multiindex
+    station_data["STATION_ID"] = station_id
+    station_data = station_data.set_index(
+        "STATION_ID", append=True).swaplevel()
+
+    # Append to final df
+    df_data_no2 = pd.concat([df_data_no2, station_data])
+
+df_data_no2
 
 # %%
-# Backup in memory
-df_backup = df_measurements.copy(deep=True)
-
+# # TODO Chache entfernen
+# data_no2.to_csv("data_no2.csv")
+# data_no2 = pd.read_csv("data_no2.csv")
 
 # %% [markdown]
 # #### b) Setzen Sie den dtype der Spalte NO2 auf float und wandeln Sie die Spalte DT in ein DateTime-Format um.
