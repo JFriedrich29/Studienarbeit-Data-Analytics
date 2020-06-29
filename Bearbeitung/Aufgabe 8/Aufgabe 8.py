@@ -57,7 +57,6 @@ for station_id in stations_ALL.index:
 
     df_all_components = pd.concat([df_all_components, station_data])
 
-df_all_components.count()
 
 # %%
 # bayrische Stationen
@@ -75,16 +74,18 @@ for station_id in stations_BY.index:
 
     df_all_components_by = pd.concat([df_all_components_by, station_data])
 
+df_all_components.count()
 df_all_components_by.count()
+# Wie man sieht sind für CO deutschlandweit keine Daten vorhanden. Ebenfalls zu erkennen ist der unvollständige Datensatz von PM10 und SO2 in Bayer über den Erhebungszeitraum.
 # %%
-df_all_components_by.to_csv('all_components_by.csv')
-df_all_components.to_csv('SO2_CO.csv')
+# df_all_components_by.to_csv('all_components_by.csv')
+# df_all_components.to_csv('SO2_CO.csv')
 # %%
 df_all_components_by = pd.read_csv('all_components_by.csv', parse_dates=[1])
 df_all_components_by.set_index(['STATION_ID', 'DT'], inplace=True)
-
-df_all_components = pd.read_csv('SO2_CO.csv', parse_dates=[1])
-df_all_components.set_index(['STATION_ID', 'DT'], inplace=True)
+# %%
+# df_all_components = pd.read_csv('SO2_CO.csv', parse_dates=[1])
+# df_all_components.set_index(['STATION_ID', 'DT'], inplace=True)
 # %%
 # TODO Use Get data for single component in earlier tasks
 station_data = api.GetMeasurements_MeanPerHour_SingleComponent(
@@ -97,7 +98,11 @@ station_data
 # %%
 # Add Type of station
 df_all_components_by = df_all_components_by.merge(
-    stations_BY[["Type"]], how="left", left_on="STATION_ID", right_index=True)
+    stations_BY["Type"], how="left", left_on="STATION_ID", right_index=True)
+# %%
+# df_all_components_by.set_index('Type',append=True, inplace=True)
+df_all_components_by['Type'] = df_all_components_by['Type'].astype(str)
+df_all_components_by.dtypes
 
 # %%
 # df_all_components_by.groupby(
@@ -114,10 +119,16 @@ df_all_components_by = df_all_components_by.merge(
 # ).mean()
 
 # %%
-df_plot_data = df_all_components_by.groupby(
+df_all_components_by[["PM10", "CO", "O3", "SO2", "NO2"]] = df_all_components_by[["PM10", "CO", "O3", "SO2", "NO2"]].groupby(
     level="DT", by=[lambda dt: dt.year, lambda dt: dt.month, lambda dt: dt.day]).mean()
-df_plot_data.rename_axis(['Year', 'Month', 'Day'], inplace=True)
-df_plot_data
+# df_plot_data.rename_axis(['Year', 'Month', 'Day'], inplace=True)
+
+# df_all_components_by["Type"].mean(numeric_only = False)
+
+# df_plot_data
+# %%
+df_all_components_by.groupby(level="DT", by=[
+                             lambda dt: dt.year, lambda dt: dt.month, lambda dt: dt.day]).mean()
 # %%
 # Only select values of the first half year of each year
 df_halfyears = df_plot_data.loc[(
@@ -141,15 +152,12 @@ end_time = pd.to_datetime("2020-06-28",
                           infer_datetime_format=True)
 x_axis_data = pd.date_range(start_time, end_time, freq='d').to_list()
 # %%
-fig = make_subplots(rows=5, cols=1,
+fig = make_subplots(rows=4, cols=1,
                     shared_xaxes=True,
                     vertical_spacing=0.05,
-                    subplot_titles=("Particulate matter", "Carbon monoxide",
+                    subplot_titles=("Particulate matter",
                                     "Ozone", "Sulphur dioxide", "Nitrogen dioxide")
                     )
-
-# x_axis_data = df_plot_data.index.get_level_values(
-#     'DT').tolist()
 
 # DATA
 # 1. plot PM10
@@ -157,33 +165,73 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["PM10"],
-        # name="Year 2020",
+        name="Year 2020",
         line=dict(color='orange'),
-        legendgroup="Year 2020"
-    ),
-)
+        legendgroup="Year 2020",
 
-# 2. plot CO
+    ),
+    row=1, col=1
+)
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_2020["CO"],
-        # name="Year 2020",
-        line=dict(color='orange'),
-        legendgroup="Year 2020"
+        y=df_halfyears_before_2020_mean_per_day["PM10"],
+        legendgroup="Mean of years 2016-2019",
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan')
+
     ),
-    row=4, col=1
+    row=1, col=1
 )
+
+# # 2. plot CO
+# fig.add_trace(
+#     go.Scatter(
+#         x=x_axis_data,
+#         y=df_halfyears_2020["CO"],
+#         name="Year 2020",
+#         line=dict(color='orange'),
+#         legendgroup="Year 2020",
+#         showlegend=False
+#     ),
+#     row=2, col=1
+# )
+# fig.add_trace(
+#     go.Scatter(
+#         x=x_axis_data,
+#         y=df_halfyears_before_2020_mean_per_day["CO"],
+#         legendgroup="Mean of years 2016-2019",
+#         name="Mean of years 2016-2019",
+#         line=dict(color='cyan'),
+#         showlegend=False
+#     ),
+#     row=2, col=1
+# )
 
 # 3. plot O3
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["O3"],
-        # name="Year 2020",
+        name="Year 2020",
         line=dict(color='orange'),
+        legendgroup="Year 2020",
+        showlegend=False
     ),
-    row=3, col=1
+    row=2, col=1
+)
+# 3. plot O3
+fig.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_before_2020_mean_per_day["O3"],
+        legendgroup="Mean of years 2016-2019",
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan'),
+        showlegend=False
+
+    ),
+    row=2, col=1
 )
 
 # 4. plot SO2
@@ -191,12 +239,24 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["SO2"],
-        # name="Year 2020",
+        name="Year 2020",
         line=dict(color='orange'),
-        legendgroup="Year 2020"
+        legendgroup="Year 2020",
+        showlegend=False
 
     ),
-    row=4, col=1
+    row=3, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_before_2020_mean_per_day["SO2"],
+        legendgroup="Mean of years 2016-2019",
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan'),
+        showlegend=False
+    ),
+    row=3, col=1
 )
 
 # 5. plot NO2
@@ -204,106 +264,42 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["NO2"],
-        # name="Year 2020",
+        name="Year 2020",
         line=dict(color='orange'),
-        legendgroup="Year 2020"
+        legendgroup="Year 2020",
+        showlegend=False
     ),
-    row=5, col=1
+    row=4, col=1
 )
-
-# 1. plot PM10
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day["PM10"],
+        y=df_halfyears_before_2020_mean_per_day['NO2'],
         legendgroup="Mean of years 2016-2019",
-        line=dict(color='cyan')
-
-    ),
-    row=1, col=1
-)
-
-# 2. plot CO
-fig.add_trace(
-    go.Scatter(
-        x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day["CO"],
-        legendgroup="Mean of years 2016-2019",
-        line=dict(color='cyan')
-    ),
-    row=2, col=1
-)
-
-# 3. plot O3
-fig.add_trace(
-    go.Scatter(
-        x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day["O3"],
-        legendgroup="Mean of years 2016-2019",
-        line=dict(color='cyan')
-
-    ),
-    row=3, col=1
-)
-
-# 4. plot SO2
-fig.add_trace(
-    go.Scatter(
-        x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day["SO2"],
-        legendgroup="Mean of years 2016-2019",
-        line=dict(color='cyan')
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan'),
+        showlegend=False
     ),
     row=4, col=1
 )
 
-# 5. plot NO2
-fig.add_trace(
-    go.Scatter(
-        x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day,
-        legendgroup="Mean of years 2016-2019",
-        line=dict(color='cyan')
 
-    ),
-    row=5, col=1
-
-)
-
-
-fig.update_layout(
-    title_text="omponent measurements of fist halfyears",
-    line=dct(color='cyan')
-    legend_orient width=80
-)
-
-# LAYOUT
-# x_layout = go.Layout(
-#     xaxis=go.layout.XAxis(
-#         title=go.layout.xaxis.Title(
-#             text='Time in Hours',
-#             font=dict(
-#                 size=18,
-#                 color='green'
-#             )
-#         )
-#     )
-# )
-
-
-fig.update_xaxes(title_text="ime", tickangle=4, row=5, col=1)
+fig.update_xaxes(title_text="Time", tickangle=45, row=5, col=1)
 
 # Update yaxis properties
 # range=[40, 80] is a usable attribute
 fig.update_yaxes(title_text="PM10 [µg/m³]", row=1, col=1)
-fig.update_yaxes(title_text="CO [mg/m³]", row=2, col=1)
-fig.update_yaxes(title_text="O3 [µg/m³]", row=3, col=1)
-fig.update_yaxes(title_text="SO2 [µg/m³]", row=4, col=1)
-fig.update_yaxes(title_text="NO2 [µg/m³]", row=5, col=1)
+fig.update_yaxes(title_text="O3 [µg/m³]", row=2, col=1)
+fig.update_yaxes(title_text="SO2 [µg/m³]", row=3, col=1)
+fig.update_yaxes(title_text="NO2 [µg/m³]", range=[0, 55], row=4, col=1)
 
 fig.update_layout(
-    template="lotly_dark",
-    # margin=dict(r=10, t=50, b=40, l=60)
+    title_text="Component measurements of fist halfyears",
+    template="plotly_dark",
+    width=800,
+    height=800
+    # legend_orientation="h",
+    # margin=dict(r=0, t=0, b=40, l=0)
     # annotations=[
     #     go.layout.Annotation(
     #         text="Source: NOAA",
@@ -320,7 +316,9 @@ fig.update_layout(
     #     font=dict(
     #         family="sans-serif",
     #         size=12,
-    #         color="black"
+    #         color="white"
+    #     )
+    # )
 )
 fig.show()
 
