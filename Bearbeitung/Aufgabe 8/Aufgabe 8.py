@@ -14,10 +14,12 @@ importlib.reload(api)
 
 # %% [markdonw]
 # #### Graphische Analyse der Daten
-# 1. Diagramm Alle 5 Schadstoffe über Zeit (Täglich). Radoi Buttons für StationsTypen und Filter für Schadstoffstypen
-# 2. Diagramm Vergleich des Schadstoffes mit dem Durchschnitt der Vorjahre (5. Vorjahre), Schadstoff über Radio Button änderbar
+# 1. Diagramme für Alle 5 Schadstoffe über Zeit (Täglich), im Vergleich zum 4 Jahres Druchschnitt der einzelnen Schadstoffe.
 # #### Art der Daten
-# Dataframe mit Allen Schadstoffstypen zu den entsprechenden Stationstypen und Zeitstempel, eventluell ein Binärencoding von dem Lockdownstatus
+# Dataframe mit Allen Schadstoffstypen zu den entsprechenden Stationstypen und Zeitstempel.
+
+# #### Hypothesen
+# 1.
 
 # #### Beobachtungen
 # 1. Keine CO Daten für den Zeitraum 2015-2020
@@ -26,9 +28,6 @@ importlib.reload(api)
 # 4. NO2 2020 ist niedriger als die Druchschnittskurve der letzten 4 Jahre
 # 5. Groß Abfall der NO2 Kurve von 2020 sind mit Ausgansprerre und großen Infektionsevents scheinbar korreliert
 
-
-# #### Hypothesen
-# 1.
 
 # %%
 # TODO Auslesen von Chache entfernen
@@ -158,10 +157,10 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["PM10"],
-        name="PM10 2020",
-        color=orange
+        # name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020"
     ),
-    row=1, col=1
 )
 
 # 2. plot CO
@@ -169,10 +168,11 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["CO"],
-        name="CO 2020",
-        color=cyan
+        # name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020"
     ),
-    row=2, col=1
+    row=4, col=1
 )
 
 # 3. plot O3
@@ -180,8 +180,8 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["O3"],
-        name="O3 2020",
-        color=orange
+        # name="Year 2020",
+        line=dict(color='orange'),
     ),
     row=3, col=1
 )
@@ -191,8 +191,10 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["SO2"],
-        name="SO2 2020",
-        color=cyan
+        # name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020"
+
     ),
     row=4, col=1
 )
@@ -202,8 +204,9 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_2020["NO2"],
-        name="NO2 2020",
-        color=orange
+        # name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020"
     ),
     row=5, col=1
 )
@@ -213,8 +216,9 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_mean_per_day["PM10"],
-        name="PM10 Average",
-        color=cyan
+        legendgroup="Mean of years 2016-2019",
+        line=dict(color='cyan')
+
     ),
     row=1, col=1
 )
@@ -224,8 +228,8 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_mean_per_day["CO"],
-        name="CO Average",
-        color=orange
+        legendgroup="Mean of years 2016-2019",
+        line=dict(color='cyan')
     ),
     row=2, col=1
 )
@@ -235,8 +239,9 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_mean_per_day["O3"],
-        name="O3 Average",
-        color=cyan
+        legendgroup="Mean of years 2016-2019",
+        line=dict(color='cyan')
+
     ),
     row=3, col=1
 )
@@ -246,8 +251,8 @@ fig.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_mean_per_day["SO2"],
-        name="SO2 Average",
-        color=orange
+        legendgroup="Mean of years 2016-2019",
+        line=dict(color='cyan')
     ),
     row=4, col=1
 )
@@ -256,18 +261,20 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_before_2020_mean_per_day["NO2"],
-        name="NO2 Average",
-        color=cyan
+        y=df_halfyears_before_2020_mean_per_day,
+        legendgroup="Mean of years 2016-2019",
+        line=dict(color='cyan')
+
     ),
     row=5, col=1
+
 )
 
 
 fig.update_layout(
-    title_text="Component measurements since start of year 2020",
-    height=1000,
-    width=800
+    title_text="omponent measurements of fist halfyears",
+    line=dct(color='cyan')
+    legend_orient width=80
 )
 
 # LAYOUT
@@ -284,7 +291,7 @@ fig.update_layout(
 # )
 
 
-fig.update_xaxes(title_text="Time", tickangle=45, row=5, col=1)
+fig.update_xaxes(title_text="ime", tickangle=4, row=5, col=1)
 
 # Update yaxis properties
 # range=[40, 80] is a usable attribute
@@ -295,7 +302,7 @@ fig.update_yaxes(title_text="SO2 [µg/m³]", row=4, col=1)
 fig.update_yaxes(title_text="NO2 [µg/m³]", row=5, col=1)
 
 fig.update_layout(
-    template="plotly_dark"
+    template="lotly_dark",
     # margin=dict(r=10, t=50, b=40, l=60)
     # annotations=[
     #     go.layout.Annotation(
@@ -306,8 +313,15 @@ fig.update_layout(
     #         x=0,
     #         y=0)
     # ]
+    # legend=dict(
+    #     x=0,
+    #     y=1,
+    #     traceorder="normal",
+    #     font=dict(
+    #         family="sans-serif",
+    #         size=12,
+    #         color="black"
 )
-
 fig.show()
 
 
