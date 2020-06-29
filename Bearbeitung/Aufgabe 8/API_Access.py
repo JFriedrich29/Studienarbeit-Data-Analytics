@@ -3,24 +3,30 @@ import pandas as pd
 import requests
 import json
 import numpy as np
+from enum import Enum
 
 
-# Public variables
-components = ["PM10", "CO", "O3", "SO2", "NO2"]
+class ComponentEnum(Enum):
+    PM10 = "1"
+    CO = "2"
+    O3 = "3"
+    SO2 = "4"
+    NO2 = "5"
 
-# Private module variables
-__base_URL = "https://www.umweltbundesamt.de/api/"
-__component_ids = {"PM10": "1", "CO": "2", "O3": "3", "SO2": "4", "NO2": "5"}
+
+# Constants
+__BASE_URL = "https://www.umweltbundesamt.de/api/"
 
 
 def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from, date_to):
-    global __base_URL
-    global __component_ids
+    global __BASE_URL
 
-    component_id = __component_ids[component]
+    # component_id = __component_ids[component]
+    component_name = component.name
+    component_id = component.value
     # Make api call
     response = requests.get(
-        __base_URL + 'air_data/v2/measures/json',
+        __BASE_URL + 'air_data/v2/measures/json',
         params={
             'use': 'measure',
             'date_from': date_from,
@@ -34,7 +40,7 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     )
     if(response.status_code != 200):
         print(
-            f"Failed request for: station_id {station_id}, component_id {component_id}, component_{component}, date_from {date_from}, date_to {date_to}")
+            f"Failed request for: station_id {station_id}, component_id {component_id}, component_{component_name}, date_from {date_from}, date_to {date_to}")
 
     # Get raw station data from json
     raw_data = json.loads(response.text)
@@ -46,10 +52,17 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     station_data_df = pd.DataFrame.from_dict(
         station_data_dict,
         orient="index",
-        columns=["component id", "scope id", component, "date end", "index"]
+        columns=["component id", "scope id",
+                 component_name, "date end", "index"]
     )
 
+    # station_data_df.index.rename("DT", inplace=True)
+
     return station_data_df
+
+
+GetMeasurements_MeanPerHour_MultiComponents(
+    "509", ComponentEnum, "2020-01-01", "2020-01-01")
 
 
 def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_from, date_to):
@@ -73,7 +86,7 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
         except:
             # If station provides no data, Insert empty column named after component
             df_multi_component.insert(
-                len(df_multi_component.columns), component, np.NaN)
+                len(df_multi_component.columns), component.name, np.NaN)
             continue
 
         # Drop unnecessary columns
@@ -84,17 +97,17 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
         # )
 
         # Convert index to datetime
-        station_data_df = station_data_df.replace(
+        df_single_component = df_single_component.replace(
             to_replace='24:00:00',
             value="00:00:00",
             regex=True
         )
-        station_data_df.index = pd.to_datetime(station_data_df.index)
-        station_data_df.index.rename("DT", inplace=True)
+        df_single_component.index = pd.to_datetime(df_single_component.index)
+        df_single_component.index.rename("DT", inplace=True)
 
         # Left join single component data on datetime index
         df_multi_component = df_multi_component.merge(
-            df_single_component[component],
+            df_single_component[component.name],
             how='left',
             left_index=True,
             right_index=True,
