@@ -25,69 +25,80 @@ importlib.reload(api)
 # ### Aufgabe 1 (Messstationen, Datenakquise, Semistrukturierte Daten, Geovisualisierung)
 # region
 # %% [markdown]
-# #### a) Beziehen Sie ̈uber die Metadaten-API des Umweltbundesamts die Daten zu den Messstatio-nen zum Stand 01.01.2020, indem Sie, z.B. unter Verwendung der Bibliothekrequests,einen geeigneten HTTP-Request absetzen. ̈Uberf ̈uhren Sie die erhaltenen (semistrukturier-ten) Daten in einen DataFrame namensstations, der f ̈ur jede Station eine Zeile mit denverf ̈ugbaren Informationen enth ̈alt (z.B. Name, Adresse, Geokoordinaten, Bundesland etc.).Speichern Sie den DataFrame in eine CSV-Datei namensstations_2020.csvund ladenSie diese mit Ihrer Einreichung auf Moodle hoch.
+# #### a)
 # %% [markdown]
 # Zu Beginn wird sich ein Überblick über die API des Umweltbudesamtes verschaffen.
 # Die API bietet eine Schnittstelle an, um Meta-Daten aller bundesweiten Messtationen zu erhalten.
 # %%
+# API zum Stand 01.01.2020 abfragen
 df_stations = api.GetMetaData_Stations_All(
     date_from="2020-01-01", date_to="2020-01-01")
 df_stations
 
+# %%[markdown]
+# Für die spätere Verwendung werden die Stationsdaten in eine in eine CSV-Datei exportiert.
 # %%
-# TODO NOTWENDIG für Abgabe
-# Export to excel
-# df_stations.to_csv("stations_2020.csv")
-
+df_stations.to_csv("stations_2020.csv")
+df_stations = pd.read_csv("stations_2020.csv", index_col="ID")
 # %% [markdown]
-# #### b) Wie viele Messstationen sind derzeit bundesweit in Betrieb?
-# When Deconstruction_Date is null, then station is still active
+# #### b)
+# Wenn die Spalte Deconstruction_Date keine Wert enthält, ist an zu nehmen dass die Station noch in Betrieb ist.
+# %%
 len(df_stations.loc[df_stations["Deconstruction_Date"].isnull()])
-
 # %% [markdown]
-# #### c) Visualisieren Sie mit Hilfe eines Kreisdiagramms, wie sich die Stationen hinsichtlich ihresTyps zusammensetzen.
+# Folglich unserer Methode erhalten wir 431 aktive Stationen.
+# %% [markdown]
+# #### c)
+# %%[markdown]
+# Das folgende Diagramm zeigt die Verteilung Stations Typen, welche für die spätere Analyse von Bedeutung sind.
 # %%
 df_stations['Type'].value_counts().plot.pie(figsize=(
-    6, 6), title="Station Types", legend=True)  # TODO Schöneres Diagramm verwenden
+    6, 6), title="Station Types", legend=True, autopct='%1.0f%%')
+
 
 # %% [markdown]
-# #### d)  Erstellen Sie mit folium eine interaktive Karte, auf der die einzelnen Messstationen als Kreise eingezeichnet sind. Industrienahe Stationen sollen gelb, verkehrsnahe rot und die Stationen mit Hintergrundbelastung grün eingezeichnet werden. Beim Klick auf die Kreisesollen die Namen der Stationen angezeigt werden.
+# #### d)
+
+# %% [markdown]
+# Die Karte die druch Folium erstellt wird zeigt die verschiedenen Typen an Sationen an und unterscheidet diese Farblich. Der Name der Station wird angezeigt wenn der Nutzer eine Station anklickt.
 # %%
 colors = {"industry": "yellow", "traffic": "red", "background": "green"}
 
-m = folium.Map(
-    location=[50.86, 12.96],
-    zoom_start=13,
-)
-# TODO Umlaute bei Namen werden nicht richtig gerendert
+m = folium.Map()
+
 for i in range(len(df_stations)):
     folium.Circle(
         location=df_stations[['Latitude', 'Longtitude']].iloc[i],
         popup=df_stations['Name'].iloc[i],
         radius=30,
-        color=colors[df_stations['Type'].iloc[i]]
+        color=colors[df_stations['Type'].iloc[i]],
     ).add_to(m)
 
+# Optimalen Default Zoom-Faktor berechnen
+sw = df_stations[['Latitude', 'Longtitude']].min().values.tolist()
+ne = df_stations[['Latitude', 'Longtitude']].max().values.tolist()
+m.fit_bounds([sw, ne])
+
 m
+# %% [markdown]
+# Grundsätzlich erkennt man eine breitfläche Verteilung der Stationen über ganz Deutschland.
+# Dabei weißen größere Städte eine höhere Dichte an Stationen auf.
+# Auch auffällig ist, das bayern keine Station vom Typ 'industry" verweisen kann.
 
 # %% [markdown]
-# #### e)  Erzeugen Sie durch Filterung des DataFramesstationseinen DataFramestations_BY, der die Informationen zu allen Messstationen in Bayern enthält.
+# #### e)
+# %% [markdown]
+#  Für alle nachfolgenden Analysen werden werden nur die Daten der Stationen aus Bayern verwendet.
 # %%
-# stations_BY = df_stations[df_stations['Network_ID'] == "2"]
 stations_BY = df_stations[df_stations['Network_Name'] == "Bavaria"]
-# stations_BY.to_excel("Stations_BY.xlsx") #TODO Auskommentieren für Abgabe
+
 # %%
 # endregion
 # %% [markdown]
 # ### Aufgabe 2 (NO2-Daten, Datenvorbereitung, Datenqualität)
 # region
 # %% [markdown]
-# #### a) Laden Sie über die Measurements-API für alle bayerischen Stationen (wie oben ermittelt) die Ein-Stunden-Mittelwerte für die NO2-Konzentrationen für den Zeitraum 01.01.2016 bis 31.12.2019 herunter und überführen Sie diese in einen DataFrame namens data_no2. Dieser soll die Spalten STATION_ID, DT und NO2 besitzen, die die Stations-ID, das Messdatum mit Uhrzeit sowie die gemessene NO2-Konzentration enthalten.
-# %%
-# TODO Auslesen von Chache entfernen
-stations_BY = pd.read_excel(
-    "Stations_BY.xlsx", index_col=0)
-# stations_BY
+# #### a)
 # %%
 # stations_data_dict = dict()
 # for id in stations_BY.index:
@@ -95,25 +106,32 @@ stations_BY = pd.read_excel(
 #                             "date_from": "2016-01-01", "time_from": "1", "date_to": "2019-12-31", "time_to": "24", "station": str(id), "component": "5", "scope": "2"})
 #     json_data = json.loads(response.text)
 #     stations_data_dict[id] = json_data['data']
-#     if(response.status_code==200):
+#     if(response.status_code == 200):
 #         print(str(id) + ": Abfrage fertig")
 #     else:
 #         break
 
-# %% # TODO evtl einfachere Methode finden
+# # %% # TODO DEPRICATED
 # list_to_create = []
 # for station_id in stations_data_dict:
 #     for station_data in stations_data_dict[station_id]:
-#         measurements_for_id = stations_data_dict[station_id][station_data].values()
+#         measurements_for_id = stations_data_dict[station_id][station_data].values(
+#         )
 #         for data_point in measurements_for_id:
 #             datetime = data_point[3]
 #             no2_value = data_point[2]
 #             list_to_create.append([station_id, datetime, no2_value])
-# df_measurements = pd.DataFrame(list_to_create,columns=["STATION_ID", "DT", "NO2"])
-# df_measurements.index.name='dp_id'
-# df_measurements = df_measurements.replace(to_replace='24:00:00', value="00:00:00", regex=True)
+# df_data_no2 = pd.DataFrame(list_to_create, columns=[
+#     "STATION_ID", "DT", "NO2"])
+# df_data_no2.index.name = 'dp_id'
+# df_data_no2 = df_data_no2.replace(
+#     to_replace='24:00:00', value="00:00:00", regex=True)
 
-# %%
+# %% [markdown]
+# Im Folgenden wird die API für jede bayrische Station nach deren stündlichen Mittelwerten der NO2 Messungen zwischen dem 01.01.2016 und 31.12.2019 abfragt.
+# Ein eigens dafür erstelltes Wrapper-Modul tätigt die API abfragen und überführt die erhaltenen Daten in das nachfolgende Dataframe 'df_data_no2'.
+# Stationen die für die Messpunkte keine Daten enthalten werden erhalten einen NaN-Wert.
+# %% #TODO SCOPE EINBAUEN ALS PARAMETER
 df_data_no2 = pd.DataFrame()
 for station_id in stations_BY.index:
 
@@ -125,215 +143,130 @@ for station_id in stations_BY.index:
 
     # Add the station id as first index for a unique multiindex
     station_data["STATION_ID"] = station_id
-    station_data = station_data.set_index(
-        "STATION_ID", append=True).swaplevel()
+    # station_data = station_data.set_index(
+    #     "STATION_ID", append=True).swaplevel()
 
     # Append to final df
     df_data_no2 = pd.concat([df_data_no2, station_data])
 
 df_data_no2
-
+# returns 1814952 rows # TODO MERKER ENTFERNEN
+# and 1557272  no2 value count()
 # %%
-# # TODO Chache entfernen
-# data_no2.to_csv("data_no2.csv")
-# data_no2 = pd.read_csv("data_no2.csv")
+df_data_no2.reset_index(inplace=True)
+
+# # %% [markdown]
+# %% [markdown]
+# Anschließend wird das Dateframe für die Analyse vorbereitet:
+# #### b)
+# %% [markdown]
+# Hier wird die Spalte NO2 in das nummerische Datenformat float überführt
+# %%
+df_data_no2["NO2"] = pd.to_numeric(df_data_no2["NO2"], errors="coerce")
 
 # %% [markdown]
-# #### b) Setzen Sie den dtype der Spalte NO2 auf float und wandeln Sie die Spalte DT in ein DateTime-Format um.
+# Die Spalte 'DT' enthält ein valides DateTime-Format. Somit ist die Umwandlung durch ein simples pd.to_datetime erledigt.
 # %%
-# Convert to numeric
-# df_measurements["NO2"] = df_measurements["NO2"].apply(
-#     pd.to_numeric, errors='coerce', axis=1)
-df_measurements["NO2"] = pd.to_numeric(df_measurements["NO2"], errors="coerce")
-
-# Convert to datetime
-# df_measurements["DT"] = df_measurements["DT"].apply(
-#     pd.to_datetime, errors='coerce', axis=1)
-df_measurements = df_measurements.replace(
-    to_replace='24:00:00', value="00:00:00", regex=True)
-df_measurements["DT"] = pd.to_datetime(df_measurements["DT"], errors="coerce")
+df_data_no2["DT"] = pd.to_datetime(df_data_no2["DT"], errors="coerce")
 # %% [markdown]
-# #### c) Entfernen Sie alle Zeilen, bei denen der Wert in der Spalte NO2 fehlt. Geben Sie an, wieviele Zeilen dadurch entfernt wurden.
+# #### c)
 # %%
-df_measurements_nanCleaned = df_measurements.dropna(
+df_data_no2_copy = df_data_no2
+df_measurements_nanCleaned = df_data_no2.dropna(
     axis=0, how="any", subset=["NO2"])
-difCount = df_measurements.shape[0] - df_measurements_nanCleaned.shape[0]
-print("Deleted " + str(difCount) + " rows that had a missing NO2 value")
-# df_measurements = df_measurements_nanCleaned # Todo einkommentieren überschreibt das orginale dataframe, müssen wir Hr. Brunner fragen ob wir das weiter verwenden dürfen
+difCount = df_data_no2.shape[0] - df_measurements_nanCleaned.shape[0]
+print("Es wurden " + str(difCount) +
+      " Zeilen gelöscht bei denen der NO2-Messwert gefehlt hat.")
 
-# %%
-# Todo Remove shape testing
-df_measurements.isnull().sum()
-df_measurements_nanCleaned.isnull().sum()
+df_data_no2 = df_measurements_nanCleaned
 
-# %%
-df_measurements.shape
-df_measurements_nanCleaned.shape
-
+# Es wurden 222693 gedroppt #TODO Merker entfernen
+# df_measurements_nanCleaned hat 1592259 Zeilen
 # %% [markdown]
-# #### d)  Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkte im Auswertezeitraum einen gültigen Messwert enthalten
-
-# %%
-# Todo remove group filtering testing
-# df_measurements_nanCleaned.groupby("STATION_ID").apply(lambda grp: grp["NO2"].isnull().sum())
-# df_measurements_grouped = df_measurements.groupby("STATION_ID")
-# df_measurements.groupby("STATION_ID").apply(
-#     lambda grp: print("Station: " + str(grp.name) +
-#     ": Count Nan: " + str(grp["NO2"].isnull().sum()) +
-#     " --- Count all vals: " + str(grp["NO2"].count()))
-#     )
+# #### d)
 
 # %%
 #
-df_tresholdFilter = df_measurements.groupby("STATION_ID").filter(
+df_tresholdFilter = df_data_no2_copy.groupby("STATION_ID").filter(
     lambda grp: grp["NO2"].isnull().sum() / grp["NO2"].count() > 0.05
 )
-df_tresholdCleaned = df_measurements.drop(df_tresholdFilter.index)
-df_tresholdCleaned.shape
+df_tresholdFilter
+# %%
+df_data_no2 = df_data_no2.drop(df_tresholdFilter.index)
 
+# df_data_no2 = df_data_no2.drop(df_tresholdFilter.index)
+# df_data_no2.shape
 
 # %% [markdown]
-# #### d)  LÖSUNG JAN: Entfernen Sie die Daten zu allen Stationen, die nicht für mindestens 95% der Messzeitpunkute im Auswertezeitraum einen gültigen Messwert enthielten
+# #### e)
 # %%
-symbols_original = df_measurements.groupby("STATION_ID")
-
-df_measurements.groupby("STATION_ID").apply(lambda x: print(
-    "NO2 isnull count :" + str(symbols_original.get_group(x)["NO2"].isnull().count()) + " NO2 Count: " + str(x["NO2"].count())))
-
-#df_measurements.groupby("STATION_ID").apply(lambda x: print("NO2 isnull count :" + str(x["NO2"].isnull()).sum() + " NO2 Count: " + str(x["NO2"].count())))
-# %%
-# symbols_original = df_measurements.groupby("STATION_ID")
-# symbols_new = df_RemovedMeasurements.groupby("STATION_ID")
-# for id in symbols_original.groups:
-#     print(str(id))
-#     amount_of_data_points = symbols_original.get_group(id)['STATION_ID'].count()
-#     try:
-#         amount_of_missing_no2_datapoints = symbols_new.get_group(id)['NO2'].count()
-#     except KeyError:
-#         print("deleted " + str(amount_of_data_points) + " in " + str(id))
-#         df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
-#     if((amount_of_missing_no2_datapoints/amount_of_data_points)<0.95):
-#         print("Removed " + str(amount_of_missing_no2_datapoints) +" from station " + str(id) +". Original data points: " + str(amount_of_data_points))
-#         df_measurements=df_measurements.drop(df_measurements[df_measurements["STATION_ID"]==id].index)
-#df_measurements.drop(symbols_original.get_group(id).index, inplace=True)
-
-
+len(df_data_no2["STATION_ID"].unique())
 # %% [markdown]
-# #### e)  Für wie viele Stationen enthält der DataFrame data_no2 nun noch Daten?
+# #### f)
 # %%
-len(df_tresholdCleaned["STATION_ID"].unique())
-# %% [markdown]
-# #### f)  Zu welchen der bayerischen Stationen enthält er keine Daten (mehr)? Geben Sie deren IDs und Namen aus.
-# %%
+# Folgende Stationen sind aus dem Dataframe gefallen
 stations_BY.loc[df_tresholdFilter["STATION_ID"].unique()][["Name"]]
-# Todo e) und f) funktionieren nur so, wenn man df_tresholdFilter verwenden date_from
 
-
-# %%
-# TODO Schreibt Daten in temp für aufgabe 3
-
-df_measurements_write_1 = df_measurements[:802284]
-df_measurements_write_2 = df_measurements[802284:]
-with pd.ExcelWriter("Temp_für_3.xlsx")as writer:
-    df_measurements_write_1.to_excel(writer, sheet_name="NO2_Measurements_1")
-    df_measurements_write_2.to_excel(writer, sheet_name="NO2_Measurements_2")
 # endregion
-
-# %%
-# TODO Import aus Datei bei zusammenfügen entfernen
-# TODO Import aus Datei bei zusammenfügen entfernen
-xls = pd.ExcelFile("Temp_für_3.xlsx")
-xls = pd.ExcelFile("Temp_für_3.xlsx")
-df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
-df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
-# df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
-# df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
-df_measurements = df1  # .append(df2)
-df_measurements = df1  # .append(df2)
-df_stations = pd.read_excel("Stations_BY.xlsx", index_col="ID")
-df_stations = pd.read_excel("Stations_BY.xlsx", index_col="ID")
-
 # %% [markdown]
 # ### Aufgabe 3 (Explorative Datenanalyse)
 # region
 # %% [markdown]
-# #### a) Welches ist der in den Jahren 2016-2019 höchste gemessene Ein-Stunden-Mittelwert für NO2? Wann und an welcher Station wurde er gemessen?
+# #### a)
 
 # %%
-MaxRow_ID, MaxRow_DT, MaxRow_NO2 = df_measurements.iloc[df_measurements["NO2"].idxmax(
-)]
-print("Der höchste NO2 Ein-Stunden-Mittelwert betrug " + str(MaxRow_NO2) + "."
-      "\nEr wurde an Station " + str(MaxRow_ID) + " '" + df_stations.loc[MaxRow_ID]["Name"] + "' am " + str(MaxRow_DT) + " gemessen.")
+df_data_no2.drop(["component id", "scope id", "date end",
+                  "index"], axis=1, inplace=True)
+# %%
+# MaxRow_ID, MaxRow_DT, MaxRow_NO2 = df_data_no2.iloc[df_data_no2["NO2"].idxmax(
+# )][["STATION_ID", "DT", "NO2"]]
+max_row = df_data_no2.loc[df_data_no2["NO2"] == df_data_no2["NO2"].max()]
+# print("Der höchste NO2 Ein-Stunden-Mittelwert betrug " + max_row['NO2'] + "."
+#       "\nEr wurde an Station " + max_row['STATION_ID'] + " '" + df_stations.loc[max_row['STATION_ID']]["Name"] + "' am " + max_row['DT'] + " gemessen.")
+max_row.merge(df_stations.loc[max_row['STATION_ID']]
+              [["Name"]], left_on="STATION_ID", right_index=True)
+
 
 # %% [markdown]
 # #### b) An welchem Tag im Auswertezeitraum war die durchschnittliche NO2-Konzentration ̈uberalle bayerischen Stationen am höchsten und welchen Wert hatte sie?
-# %%
-df_measurements["Year"] = pd.to_datetime(df_measurements["DT"]).dt.year
-df_measurements["Date"] = pd.to_datetime(df_measurements["DT"]).dt.date
-df_measurements["Time"] = pd.to_datetime(df_measurements["DT"]).dt.time
-# %%
-daily_averages_no2 = []
-days = df_measurements.groupby("Date")
-for day in days.groups:
-    daily_averages_no2.append((days.get_group(day)["NO2"].mean(), day))
-print(max(daily_averages_no2, key=lambda element: element[0]))
 
 # %%
-#df_measurements[['Date', "NO2"]].groupby("Date").mean().max()
-
-# %%
-df_measurements[['Date', "NO2"]].groupby("Date").mean(
+df_data_no2[['Date', "NO2"]].groupby(df_data_no2["DT"].dt.date).mean(
 ).sort_values(by="NO2", ascending=False).head(1)
+
+# Am 23.01.2017 war die tagesdurchschnittliche NO2-Konzentration mit knapp 75.56 μg/m3 am
 
 # %% [markdown]
 # #### c) Ermitteln Sie die 10 höchsten Messwerte und die zugehörigen Messzeitpunkte für die Station in der Nikolaistraße in Weiden.
 
 # %%
-id = df_stations.loc[df_stations["Name"] ==
-                     "Weiden i.d.OPf./Nikolaistraße"].index[0]
-df_measurements_nico = df_measurements.loc[df_measurements["STATION_ID"] == id]
+id_nicolaistreet = df_stations.loc[df_stations["Name"] ==
+                                   "Weiden i.d.OPf./Nikolaistraße"].index[0]
+df_measurements_nico = df_data_no2.loc[df_data_no2["STATION_ID"]
+                                       == id_nicolaistreet]
 df_measurements_nico.sort_values(by="NO2", ascending=False, inplace=True)
-print(df_measurements_nico.iloc[: 10].to_string(
-    index=False, columns=["DT", "NO2"]))
-# %%
-
+# print(df_measurements_nico.iloc[: 10].to_string(
+#     index=False, columns=["DT", "NO2"]))
+df_measurements_nico.iloc[: 10][["DT", "NO2"]]
+# %% [markdown]
 # #### d)  Berechnen Sie die Mittelwerte der gemessenen NO2-Konzentrationen über die einzelnen Jahre. Wie haben sich diese zeitlich entwickelt? Unterscheiden Sie dabei auch nach demStations-Typ.
 # %%
-# %%
-# TODO @Jan Wie verstehst du Angabe: Ist das so gemeint, dass man erst nur nach Jahren gruppieren soll und dann nochmal nach Jahren und Typ?
 # Gruppierung nur nach Year
-df_yearMean = df_measurements.groupby(["Year"]).mean()
+df_yearMean = df_data_no2.groupby(df_data_no2["DT"].dt.year).mean()
 df_yearMean
 
 # Gruppierung nur nach Year und Type, dazu ist merge notwendig
 # %%
-df_merge = df_measurements.merge(
+df_merge = df_data_no2.merge(
     df_stations[["Type"]], how="left", left_on="STATION_ID", right_index=True)
 
-df_YearTypeMean = df_merge.groupby(["Year", "Type"]).mean()[["NO2"]]
+df_YearTypeMean = df_merge.groupby(
+    [df_merge["DT"].dt.year, "Type"]).mean()[["NO2"]]
+df_YearTypeMean
 # %%
 # Diagramm zeigt Mittelwert über Jahre gruppiert nach Typ
-# TODO Diagramm schöner machen
 df_YearTypeMean.unstack().plot(kind="bar")
-
-# x = np.array([2, 4, 6, 8, 10])
-
-# plt.bar(x-0.25, , width=0.5, label='Year')
-# plt.bar(x+0.25, df_YearTypeMean.loc["Type"], width=0.5, label='Type')
-
-# plt.xticks(x, df_YearTypeMean.index)
-# plt.xlabel('Year')
-# plt.ylabel('NO2')
-# plt.legend()
 # endregion
-# %%
-# %%
-# TODO Import aus Datei bei zusammenfügen entfernen
-xls = pd.ExcelFile("Temp_für_3.xlsx")
-df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
-df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
-df_measurements = df1.append(df2)
-
 # %% [markdown]
 # ### Aufgabe 4 (Verletzung der zul ̈assigen NO2-Grenzwerte)
 # region
@@ -341,7 +274,7 @@ df_measurements = df1.append(df2)
 # #### a)  Ermitteln Sie, an welchen bayerischen Stationen jeweils in den Jahren 2016-2019 ̈Uberschrei-tungen des Stundengrenzwerts(d.h. der Ein-Stunden-Mittelwert ̈uberschreitet 200μg/m3)gemessen wurden, und geben Sie an wie viele ̈Uberschreitungen es jeweils waren. Dieserdarf innerhalb eines Jahres h ̈ochstens 18-Mal pro Station ̈uberschritten werden. Welche Sta-tionen haben dieses Kriterium verletzt?
 # %%
 # Alle Überschreitungen holen
-violating_datapoints = df_measurements[df_measurements["NO2"] > 200]
+violating_datapoints = df_data_no2[df_data_no2["NO2"] > 200]
 
 # Die Anzahl pro Station auswerten
 violations_per_station = violating_datapoints.groupby("STATION_ID").count()[
@@ -351,8 +284,8 @@ violations_per_station
 
 # %%
 violating_datapoints.groupby(
-    [violating_datapoints["DT"].dt.year, "STATION_ID"]).count()[["NO2"]]
-# Todo Angabe sagt, dass es eigentlich Stationen geben sollte die das Limit überschreiten
+    ["STATION_ID", violating_datapoints["DT"].dt.year]).count()[["NO2"]]
+# Todo Fragen ob wirklich keine überschreiten
 
 
 # %% [markdown]
@@ -362,30 +295,14 @@ violating_datapoints.groupby(
 
 #df_measurements = df_measurements.set_index("DT")
 
-violations_per_station_yearly = df_measurements.groupby(
-    ["STATION_ID", pd.Grouper(freq='Y')])
+violations_data_points_yearly = df_data_no2.groupby(
+    by=["STATION_ID", df_data_no2["DT"].dt.year]).mean()["NO2"]
 
-#sums_over_dt = [sum(station) for station in violations_per_station_yearly]
-
-violations_data_points_yearly = violations_per_station_yearly["NO2"].mean()
-
-result = violations_data_points_yearly[violations_data_points_yearly > 40]
-result
-# TODO In Result stehen jetzt die Jahre und stationen drin die den Grenzwert von 40μg/m3 überschritten habe, aber es wird noch das Datum des letzten Tages des Jahrs in der Spalte dt angezeigt
+violations_data_points_yearly[violations_data_points_yearly > 40]
 
 # endregion
 
 # %%
-# TODO Import aus Datei bei zusammenfügen entfernen
-xls = pd.ExcelFile("Temp_für_3.xlsx")
-df1 = pd.read_excel(xls, "NO2_Measurements_1", index_col="dp_id")
-df2 = pd.read_excel(xls, "NO2_Measurements_2", index_col="dp_id")
-df_measurements = df1.append(df2)
-# %%
-
-fig = px.histogram(
-    df_measurements["NO2"])
-fig.show()
 # %% [markdown]
 # ### Aufgabe 5 (Visualisierung)
 # region
@@ -394,27 +311,32 @@ fig.show()
 # #### a) Erstellen Sie ein Histogramm über alle gemessenen NO2-Konzentrationen im Auswertungszeitraum 2016-2019.
 
 trace = go.Histogram(
-    x=df_measurements["NO2"],
+    x=df_data_no2["NO2"],
     marker=dict(
         line=dict(
-            width=1.5,
+            width=1,
+            color="royalblue"
         )
     ),
     histnorm='density'
 )
 
 layout = go.Layout(
+    template="plotly_dark",
     title=go.layout.Title(
-        text='NO2 Konzentration Häufigkeiten',
+        text='<b>Histogramm der NO2 Konzentrationen</b>',
+        font=dict(color='royalblue')
     ),
     xaxis=go.layout.XAxis(
         title=go.layout.xaxis.Title(
             text='Konzentration',
+            font=dict(color='lightblue')
         )
     ),
     yaxis=go.layout.YAxis(
         title=go.layout.yaxis.Title(
             text='Häufigkeit',
+            font=dict(color='lightblue')
         )
     )
 )
@@ -437,16 +359,16 @@ def month_to_season(month_int):
 
 
 # %%
-df_measurements["Season"] = df_measurements["DT"].map(
+df_data_no2["Season"] = df_data_no2["DT"].map(
     lambda dt: month_to_season(dt.month))
 
 # %%
 # df_measurements.groupby(month_to_season(df_measurements["DT"].dt.month)).mean()[["NO2"]]
 
-df_mean_per_season = df_measurements.groupby(
+df_mean_per_season = df_data_no2.groupby(
     [
-        df_measurements["DT"].dt.year,
-        month_to_season(df_measurements["DT"].dt.month)
+        df_data_no2["DT"].dt.year,
+        month_to_season(df_data_no2["DT"].dt.month)
     ]
 ).mean()[["NO2"]]
 
@@ -456,7 +378,6 @@ df_mean_per_season = df_measurements.groupby(
 df_mean_per_season.rename_axis(['Year', 'Season'], inplace=True)
 
 # %%
-# TODO level=0 durch string ersetzen
 x_years = df_mean_per_season.index.get_level_values(level="Year").unique()
 
 mean_yearly_values = []
@@ -464,50 +385,72 @@ for year in x_years:
     mean_yearly_values.append(df_mean_per_season.loc[year].values.mean())
 
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(
+trace1 = go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
         ["Spring"], level='Season')]["NO2"],
     mode="lines",
     name="Spring NO2 Averages"
-))
-fig.add_trace(go.Scatter(
+)
+trace2 = go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
         ["Autumn"], level='Season')]["NO2"],
     mode="lines",
     name="Autumn NO2 Averages"
-))
-fig.add_trace(go.Scatter(
+)
+trace3 = go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
         ["Summer"], level='Season')]["NO2"],
     mode="lines",
     name="Summer NO2 Averages"
-))
-fig.add_trace(go.Scatter(
+)
+trace4 = go.Scatter(
     x=x_years,
     y=df_mean_per_season.iloc[df_mean_per_season.index.isin(
         ["Winter"], level='Season')]["NO2"],
     mode="lines",
     name="Winter NO2 Averages"
-))
-fig.add_trace(go.Scatter(
+)
+# TODO Explain additional trace
+trace5 = go.Scatter(
     x=x_years,
     y=mean_yearly_values,
     mode="lines",
     name="Average yearly NO2 Concentration"
-))
+)
 
+layout = go.Layout(
+    template="plotly_dark",
+    title=go.layout.Title(
+        text='<b>Jahreszeitlicher Verlauf der NO2 Konzentration</b>',
+        font=dict(color='royalblue')
+    ),
+    xaxis=go.layout.XAxis(
+        title=go.layout.xaxis.Title(
+            text='Jahre',
+            font=dict(color='lightblue')
+        )
+    ),
+    yaxis=go.layout.YAxis(
+        title=go.layout.yaxis.Title(
+            text='Konzentration',
+            font=dict(color='lightblue')
+        )
+    )
+)
+
+data = [trace1, trace2, trace3, trace4, trace5]
+fig = go.Figure(data=data, layout=layout)
 
 fig.show()
 
 # %% [markdown]
 # #### c) Visualisieren Sie in einem geeigneten Diagramm den Zeitverlauf der Tagesmittel der ge-messenen NO2-Konzentrationen im Beobachtungszeitraum. Lassen sich Trends erkennen?
 # %%
-df_mean_per_day = df_measurements.groupby(
-    df_measurements["DT"].dt.date).agg({"NO2": "mean"})
+df_mean_per_day = df_data_no2.groupby(
+    df_data_no2["DT"].dt.date).agg({"NO2": "mean"})
 # %%
 fig = px.line(
     df_mean_per_day,
@@ -518,23 +461,15 @@ fig.show()
 
 # endregion
 
-# %%
-# # TODO Import aus Datei bei zusammenfügen entfernen
-# xls = pd.ExcelFile("Temp_für_3.xlsx")
-# df1 = pd.read_excel(xls, 'NO2_Measurements_1', index_col='dp_id')
-# # df2 = pd.read_excel(xls, 'NO2_Measurements_2', index_col='dp_id')
-# df_measurements = df1  # .append(df2)
-# df_stations = pd.read_excel("Stations_BY.xlsx", index_col='ID')
-
 # %% [markdown]
 # ### Aufgabe 6  (Interaktives Diagramm)
 # region
 # %% [markdown]
-# #### a)  Erzeugen Sie ein interaktives Säulendiagramm inPlotly, in welchem die Mittelwerte derNO2-Konzentrationen im Tagesverlauf ̈uber die (vollen) Stunden aufgetragen werden. Ver-wenden Sie als Datengrundlage die Messwerte der bayerischen Stationen aus dem DataFra-meno2_data. Das Diagramm soll zwei Radio-Buttons enthalten. ̈Uber den ersten Radio-Button kann der Stations-Typ gefiltert werden (Auswahlm ̈oglichkeitenall,backgroundundtraffic), ̈uber den zweiten Radio-Button kann der Wochentag eingeschr ̈ankt werden(Auswahlm ̈oglichkeitenAll,Monday, ...,Sunday)
+# #### a)
 # %% [markdown]
 
 # %%
-df_merge = df_measurements.merge(
+df_merge = df_data_no2.merge(
     df_stations[['Type']], how='left', left_on='STATION_ID', right_index=True)
 # %%
 df_data = df_merge.groupby(
@@ -550,7 +485,6 @@ df_data.rename_axis(['Type', 'Weekday', 'Hour'], inplace=True)
 df_data
 
 # %%
-# Todo Stunde 24 ist nicht Stunde 0, Evtl auf 24 manuell mappen
 
 data = [go.Bar(
     x=df_data.index.get_level_values('Hour').unique(),
@@ -558,6 +492,7 @@ data = [go.Bar(
 )]
 
 layout = go.Layout(
+    template="plotly_dark",
     title=go.layout.Title(
         text='Daily chart of mean NO2 measurements of bavarian stations',
         font=dict(
@@ -686,11 +621,6 @@ df_data_o3.index = pd.to_datetime(df_data_o3.index)
 df_data_o3.drop(['component id', 'scope id', 'date end',
                  'index'], inplace=True, axis=1)
 
-# %%
-# TODO ENTFERNEN für Abgabe
-# df_data_o3.to_csv('data_o3.csv')
-# df_data_o3 = pd.read_csv('data_o3.csv')
-
 # %% [markdown]
 # #### d) Aggregieren Sie die Messwerte, indem Sie die O3-Maximalkonzentrationen pro Tag ermit-teln und diese in einen DataFrame namenso3_data_maxspeichern.
 o3_data_max = df_data_o3.groupby(df_data_o3.index.date).max()
@@ -704,6 +634,7 @@ trace = go.Scattergl(
 )
 
 layout = go.Layout(
+    template="plotly_dark",
     title=go.layout.Title(
         text='Daily chart of mean ozone measurements',
         font=dict(
@@ -763,6 +694,7 @@ trace = go.Scattergl(
 )
 
 layout = go.Layout(
+    template="plotly_dark",
     title=go.layout.Title(
         text='Daily maximum values of ozone and temperature',
         font=dict(

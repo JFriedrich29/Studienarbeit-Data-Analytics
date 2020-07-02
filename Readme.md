@@ -91,7 +91,7 @@ die orginal Tabelle überschreiben muss. --> Prof fragen
 
 ## Aufgabe 8:
 
-- [ ] Coronaeinfluss prüfen
+- [x] Coronaeinfluss prüfen
 
 ---
 

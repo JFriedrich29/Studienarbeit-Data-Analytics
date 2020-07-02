@@ -30,7 +30,7 @@ stations_ALL = pd.read_excel(
 # %%
 date_from = "2016-01-01"
 # TODO Auf 30.06 setzen und nochmal abfragen (ganzer monat)
-date_to = "2020-06-28"
+date_to = "2020-06-30"
 
 # Deutsche Stationen
 df_all_components = pd.DataFrame()

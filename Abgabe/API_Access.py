@@ -47,9 +47,9 @@ def GetMetaData_Stations_All(date_from, date_to):
     # Parse into custom column names
     df_stations_meta = pd.DataFrame.from_dict(station_data_dict,
                                               orient="index",
-                                              columns=["ID", "Code", "Name", "Location", "x2", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
+                                              columns=["ID", "Code", "Name", "Location", "Code_Name", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
                                                        "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name", "Settings_Long",
-                                                       "Settings_Short", "Type", "Street_Name", "Street_Number", "x6"],
+                                                       "Settings_Short", "Type", "Street_Name", "Street_Number", "ZIP_Code"],
                                               )
 
     df_stations_meta.set_index('ID', inplace=True)
