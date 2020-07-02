@@ -434,10 +434,10 @@ fig_type.add_trace(
         line=dict(color='lightgreen'),
         showlegend=False,
     ),
-    row=3, col=1, secondary_y=True
+    row=1, col=1, secondary_y=True
 )
 
-# 1.4. Ausgangssperre
+# 3.3. Ausgangssperre
 fig_type.add_shape(
     dict(
         type="line",
@@ -450,10 +450,10 @@ fig_type.add_shape(
             width=1
         )
     ),
-    row=3, col=1, secondary_y=False
+    row=2, col=1, secondary_y=False
 )
 
-# 2.3 Traffic NO2 Relative
+# 3.2 Traffic NO2 Relative
 fig_type.add_trace(
     go.Scatter(
         x=x_axis_data,
@@ -464,24 +464,9 @@ fig_type.add_trace(
         line=dict(color='lightgreen'),
         showlegend=False,
     ),
-    row=3, col=1, secondary_y=True
+    row=2, col=1, secondary_y=True
 )
 
-# 2.4. Ausgangssperre
-fig_type.add_shape(
-    dict(
-        type="line",
-        x0=pd.to_datetime('2020-3-20'),
-        y0=0,
-        x1=pd.to_datetime('2020-3-20'),
-        y1=60,
-        line=dict(
-            color='red',
-            width=1
-        )
-    ),
-    row=3, col=1, secondary_y=False
-)
 
 fig_type.update_layout(
     title_text="Component measurements of fist halfyears",
