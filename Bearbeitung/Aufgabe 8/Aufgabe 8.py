@@ -119,30 +119,37 @@ df_all_components_by.dtypes
 # ).mean()
 
 # %%
-df_all_components_by[["PM10", "CO", "O3", "SO2", "NO2"]] = df_all_components_by[["PM10", "CO", "O3", "SO2", "NO2"]].groupby(
-    level="DT", by=[lambda dt: dt.year, lambda dt: dt.month, lambda dt: dt.day]).mean()
-# df_plot_data.rename_axis(['Year', 'Month', 'Day'], inplace=True)
+df_plot_data = df_all_components_by.groupby(
+    level=["DT"], by=[lambda dt: dt.year, lambda dt: dt.month, lambda dt: dt.day, "Type"]).mean()
+df_plot_data.rename_axis(['Year', 'Month', 'Day', 'Type'], inplace=True)
+df_plot_data
+# %%
+df_all_components_by.set_index("Type", append=True, inplace=True)
 
 # df_all_components_by["Type"].mean(numeric_only = False)
 
 # df_plot_data
-# %%
-df_all_components_by.groupby(level="DT", by=[
-                             lambda dt: dt.year, lambda dt: dt.month, lambda dt: dt.day]).mean()
 # %%
 # Only select values of the first half year of each year
 df_halfyears = df_plot_data.loc[(
     df_plot_data.index.get_level_values(level='Month') <= 6)]
 df_halfyears
 # %%
-# Get data
-df_halfyears_before_2020_mean_per_day = df_halfyears.loc[
+df_halfyears_before_2020 = df_halfyears.loc[
     (df_halfyears.index.get_level_values(level='Year') <= 2019) &
     (df_halfyears.index.get_level_values(level='Year') >= 2016)
-].groupby(["Month", "Day"]).mean()
+]
 
-df_halfyears_2020 = df_halfyears.loc[df_halfyears.index.get_level_values(
-    level='Year') == 2020]
+df_halfyears_2020 = df_halfyears.loc[
+    df_halfyears.index.get_level_values(level='Year') == 2020
+]
+# %%
+# Get data
+df_halfyears_before_2020_mean_per_day = df_halfyears_before_2020.groupby([
+                                                                         "Month", "Day"]).mean()
+
+df_halfyears_2020_mean_per_day = df_halfyears_2020.groupby(
+    ["Month", "Day"]).mean()
 
 # %%
 # Calculate x axes value
@@ -152,6 +159,7 @@ end_time = pd.to_datetime("2020-06-28",
                           infer_datetime_format=True)
 x_axis_data = pd.date_range(start_time, end_time, freq='d').to_list()
 # %%
+# region First diagramm
 fig = make_subplots(rows=4, cols=1,
                     shared_xaxes=True,
                     vertical_spacing=0.05,
@@ -164,11 +172,10 @@ fig = make_subplots(rows=4, cols=1,
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_2020["PM10"],
+        y=df_halfyears_2020_mean_per_day["PM10"],
         name="Year 2020",
         line=dict(color='orange'),
-        legendgroup="Year 2020",
-
+        legendgroup="Year 2020"
     ),
     row=1, col=1
 )
@@ -188,7 +195,7 @@ fig.add_trace(
 # fig.add_trace(
 #     go.Scatter(
 #         x=x_axis_data,
-#         y=df_halfyears_2020["CO"],
+#         y=df_halfyears_2020_mean_per_day["CO"],
 #         name="Year 2020",
 #         line=dict(color='orange'),
 #         legendgroup="Year 2020",
@@ -212,7 +219,7 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_2020["O3"],
+        y=df_halfyears_2020_mean_per_day["O3"],
         name="Year 2020",
         line=dict(color='orange'),
         legendgroup="Year 2020",
@@ -238,7 +245,7 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_2020["SO2"],
+        y=df_halfyears_2020_mean_per_day["SO2"],
         name="Year 2020",
         line=dict(color='orange'),
         legendgroup="Year 2020",
@@ -263,7 +270,7 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=x_axis_data,
-        y=df_halfyears_2020["NO2"],
+        y=df_halfyears_2020_mean_per_day["NO2"],
         name="Year 2020",
         line=dict(color='orange'),
         legendgroup="Year 2020",
@@ -321,6 +328,204 @@ fig.update_layout(
     # )
 )
 fig.show()
+# endregion
+# %%
+# Get data
 
+# Background
+# 2016 - 2019
+df_halfyears_before_2020_NO2_mean_per_day_background = df_halfyears_before_2020.loc[
+    df_halfyears_before_2020.index.get_level_values(
+        level='Type') == 'background'].groupby(
+    ["Month", "Day", "Type"])[['NO2']].mean()
+
+#
+df_halfyears_2020_NO2_mean_per_day_background = df_halfyears_2020.loc[
+    df_halfyears_2020.index.get_level_values(
+        level='Type') == 'background'].groupby(
+    ["Month", "Day", "Type"])[["NO2"]].mean()
+
+# Traffic
+# 2016 - 2019
+df_halfyears_before_2020_NO2_mean_per_day_traffic = df_halfyears_before_2020.loc[
+    df_halfyears_before_2020.index.get_level_values(
+        level='Type') == 'traffic'].groupby(
+    ["Month", "Day", "Type"])[['NO2']].mean()
+
+# 2020
+df_halfyears_2020_NO2_mean_per_day_traffic = df_halfyears_2020.loc[
+    df_halfyears_2020.index.get_level_values(
+        level='Type') == 'traffic'].groupby(
+    ["Month", "Day", "Type"])[["NO2"]].mean()
+# %%
+fig_type = make_subplots(rows=2, cols=1,
+                         shared_xaxes=True,
+                         vertical_spacing=0.1,
+                         subplot_titles=("Background",
+                                         "Traffic"),
+                         specs=[[{"secondary_y": True}],
+                                [{"secondary_y": True}]]
+                         )
+
+# 1.1 Background NO2 2020
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_2020_NO2_mean_per_day_background['NO2'],
+        name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020",
+        showlegend=False
+    ),
+    row=1, col=1, secondary_y=False
+)
+
+# 1.2 Background NO2 2016 - 2019
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_before_2020_NO2_mean_per_day_background['NO2'],
+        legendgroup="Mean of years 2016-2019",
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan'),
+        showlegend=False
+    ),
+    row=1, col=1, secondary_y=False
+)
+
+
+# 2.1 Traffic NO2 2020
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_2020_NO2_mean_per_day_traffic['NO2'],
+        name="Year 2020",
+        line=dict(color='orange'),
+        legendgroup="Year 2020",
+        showlegend=False
+    ),
+    row=2, col=1, secondary_y=False
+)
+
+# 2.2 Traffic NO2 2016 - 2019
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_before_2020_NO2_mean_per_day_traffic['NO2'],
+        legendgroup="Mean of years 2016-2019",
+        name="Mean of years 2016-2019",
+        line=dict(color='cyan'),
+        showlegend=False
+    ),
+    row=2, col=1, secondary_y=False
+)
+
+
+# 1.3 Background NO2 Relative
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_2020_NO2_mean_per_day_background['NO2']
+        .div(
+            df_halfyears_before_2020_NO2_mean_per_day_background['NO2']
+        ),
+        legendgroup="Relative Difference",
+        name="Relative Difference between mean of 2016-2019 and mean of 2020 Background",
+        line=dict(color='lightgreen'),
+        showlegend=False,
+    ),
+    row=3, col=1, secondary_y=True
+)
+
+# 1.4. Ausgangssperre
+fig_type.add_shape(
+    dict(
+        type="line",
+        x0=pd.to_datetime('2020-3-20'),
+        y0=0,
+        x1=pd.to_datetime('2020-3-20'),
+        y1=60,
+        line=dict(
+            color='red',
+            width=1
+        )
+    ),
+    row=3, col=1, secondary_y=False
+)
+
+# 2.3 Traffic NO2 Relative
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_2020_NO2_mean_per_day_traffic['NO2'].div(
+            df_halfyears_before_2020_NO2_mean_per_day_traffic['NO2']),
+        legendgroup="Relative Difference",
+        name="Relative Difference between mean of 2016-2019 and mean of 2020",
+        line=dict(color='lightgreen'),
+        showlegend=False,
+    ),
+    row=3, col=1, secondary_y=True
+)
+
+# 2.4. Ausgangssperre
+fig_type.add_shape(
+    dict(
+        type="line",
+        x0=pd.to_datetime('2020-3-20'),
+        y0=0,
+        x1=pd.to_datetime('2020-3-20'),
+        y1=60,
+        line=dict(
+            color='red',
+            width=1
+        )
+    ),
+    row=3, col=1, secondary_y=False
+)
+
+fig_type.update_layout(
+    title_text="Component measurements of fist halfyears",
+    template="plotly_dark",
+    width=800,
+    height=800
+    # legend_orientation="h",
+    # margin=dict(r=0, t=0, b=40, l=0)
+    # annotations=[
+    #     go.layout.Annotation(
+    #         text="Source: NOAA",
+    #         showarrow=False,
+    #         xref="paper",
+    #         yref="paper",
+    #         x=0,
+    #         y=0)
+    # ]
+    # legend=dict(
+    #     x=0,
+    #     y=1,
+    #     traceorder="normal",
+    #     font=dict(
+    #         family="sans-serif",
+    #         size=12,
+    #         color="white"
+    #     )
+    # )
+)
+
+# Update yaxis properties
+# range=[40, 80] is a usable attribute
+# fig_type.update_layout(row=1, col=1, yaxis_tickformat="%")
+# fig_type.update_layout(row=2, col=1, yaxis_tickformat="%")
+
+fig_type.update_yaxes(
+    tickformat="%", row=1, col=1, secondary_y=True)
+fig_type.update_yaxes(
+    tickformat="%", row=2, col=1, secondary_y=True)
+
+fig_type.update_yaxes(
+    title_text="NO2 [µg/m³]", row=1, col=1, secondary_y=False)
+fig_type.update_yaxes(
+    title_text="NO2 [µg/m³]", row=2, col=1, secondary_y=False)
+
+fig_type.show()
 
 # %%
