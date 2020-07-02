@@ -18,16 +18,6 @@ importlib.reload(api)
 # #### Art der Daten
 # Dataframe mit Allen Schadstoffstypen zu den entsprechenden Stationstypen und Zeitstempel.
 
-# #### Hypothesen
-# 1.
-
-# #### Beobachtungen
-# 1. Keine CO Daten für den Zeitraum 2015-2020
-# 2. PM10 Daten erste ab Ende März 2019
-# 3. SO2 Daten nur bis Juni 2018
-# 4. NO2 2020 ist niedriger als die Druchschnittskurve der letzten 4 Jahre
-# 5. Groß Abfall der NO2 Kurve von 2020 sind mit Ausgansprerre und großen Infektionsevents scheinbar korreliert
-
 
 # %%
 # TODO Auslesen von Chache entfernen
@@ -328,6 +318,15 @@ fig.update_layout(
     # )
 )
 fig.show()
+
+
+# #### Beobachtungen
+# 1. Keine CO Daten für den Zeitraum 2015-2020
+# 2. PM10 Daten erste ab Ende März 2019
+# 3. SO2 Daten nur bis Juni 2018
+# 4. NO2 2020 ist niedriger als die Druchschnittskurve der letzten 4 Jahre
+
+
 # endregion
 # %%
 # Get data
@@ -358,13 +357,13 @@ df_halfyears_2020_NO2_mean_per_day_traffic = df_halfyears_2020.loc[
         level='Type') == 'traffic'].groupby(
     ["Month", "Day", "Type"])[["NO2"]].mean()
 # %%
-fig_type = make_subplots(rows=2, cols=1,
+fig_type = make_subplots(rows=3, cols=1,
                          shared_xaxes=True,
                          vertical_spacing=0.1,
-                         subplot_titles=("Background",
-                                         "Traffic"),
-                         specs=[[{"secondary_y": True}],
-                                [{"secondary_y": True}]]
+                         subplot_titles=("<b>Background</b>",
+                                         "<b>Traffic</b>",
+                                         "<b>Relativ difference between 2020 and previous halfyears</b>"),
+                         row_width=[0.6, 0.3, 0.3]
                          )
 
 # 1.1 Background NO2 2020
@@ -373,11 +372,11 @@ fig_type.add_trace(
         x=x_axis_data,
         y=df_halfyears_2020_NO2_mean_per_day_background['NO2'],
         name="Year 2020",
-        line=dict(color='orange'),
-        legendgroup="Year 2020",
-        showlegend=False
+        line=dict(color='magenta'),
+        legendgroup="Absolut",
+        showlegend=True
     ),
-    row=1, col=1, secondary_y=False
+    row=1, col=1
 )
 
 # 1.2 Background NO2 2016 - 2019
@@ -385,14 +384,28 @@ fig_type.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_NO2_mean_per_day_background['NO2'],
-        legendgroup="Mean of years 2016-2019",
+        legendgroup="Absolut",
         name="Mean of years 2016-2019",
         line=dict(color='cyan'),
-        showlegend=False
+        showlegend=True
     ),
-    row=1, col=1, secondary_y=False
+    row=1, col=1
 )
-
+# 1.3. Ausgangssperre
+fig_type.add_shape(
+    dict(
+        type="line",
+        x0=pd.to_datetime('2020-3-20'),
+        y0=0,
+        x1=pd.to_datetime('2020-3-20'),
+        y1=45,
+        line=dict(
+            color='red',
+            width=1
+        )
+    ),
+    row=1, col=1
+)
 
 # 2.1 Traffic NO2 2020
 fig_type.add_trace(
@@ -400,11 +413,11 @@ fig_type.add_trace(
         x=x_axis_data,
         y=df_halfyears_2020_NO2_mean_per_day_traffic['NO2'],
         name="Year 2020",
-        line=dict(color='orange'),
-        legendgroup="Year 2020",
+        line=dict(color='magenta'),
+        legendgroup="Absolut",
         showlegend=False
     ),
-    row=2, col=1, secondary_y=False
+    row=2, col=1
 )
 
 # 2.2 Traffic NO2 2016 - 2019
@@ -412,32 +425,14 @@ fig_type.add_trace(
     go.Scatter(
         x=x_axis_data,
         y=df_halfyears_before_2020_NO2_mean_per_day_traffic['NO2'],
-        legendgroup="Mean of years 2016-2019",
+        legendgroup="Absolut",
         name="Mean of years 2016-2019",
         line=dict(color='cyan'),
         showlegend=False
     ),
-    row=2, col=1, secondary_y=False
+    row=2, col=1
 )
-
-
-# 1.3 Background NO2 Relative
-fig_type.add_trace(
-    go.Scatter(
-        x=x_axis_data,
-        y=df_halfyears_2020_NO2_mean_per_day_background['NO2']
-        .div(
-            df_halfyears_before_2020_NO2_mean_per_day_background['NO2']
-        ),
-        legendgroup="Relative Difference",
-        name="Relative Difference between mean of 2016-2019 and mean of 2020 Background",
-        line=dict(color='lightgreen'),
-        showlegend=False,
-    ),
-    row=1, col=1, secondary_y=True
-)
-
-# 3.3. Ausgangssperre
+# 2.3. Ausgangssperre
 fig_type.add_shape(
     dict(
         type="line",
@@ -450,7 +445,24 @@ fig_type.add_shape(
             width=1
         )
     ),
-    row=2, col=1, secondary_y=False
+    row=2, col=1
+)
+
+
+# 3.1 Background NO2 Relative
+fig_type.add_trace(
+    go.Scatter(
+        x=x_axis_data,
+        y=df_halfyears_2020_NO2_mean_per_day_background['NO2']
+        .div(
+            df_halfyears_before_2020_NO2_mean_per_day_background['NO2']
+        ),
+        legendgroup="Relative Difference",
+        name="Background",
+        line=dict(color='orange'),
+        showlegend=True,
+    ),
+    row=3, col=1
 )
 
 # 3.2 Traffic NO2 Relative
@@ -460,57 +472,99 @@ fig_type.add_trace(
         y=df_halfyears_2020_NO2_mean_per_day_traffic['NO2'].div(
             df_halfyears_before_2020_NO2_mean_per_day_traffic['NO2']),
         legendgroup="Relative Difference",
-        name="Relative Difference between mean of 2016-2019 and mean of 2020",
-        line=dict(color='lightgreen'),
-        showlegend=False,
+        name="Traffic",
+        line=dict(color='#32FF00'),
+        showlegend=True,
     ),
-    row=2, col=1, secondary_y=True
+    row=3, col=1
 )
 
 
+# 3.3. Ausgangssperre
+fig_type.add_shape(
+    dict(
+        type="line",
+        x0=pd.to_datetime('2020-3-20'),
+        y0=0,
+        x1=pd.to_datetime('2020-3-20'),
+        y1=2.5,
+        line=dict(
+            color='red',
+            width=1
+        )
+    ),
+    row=3, col=1
+)
+
+# 3.4. 100%
+fig_type.add_shape(
+    dict(
+        type="line",
+        x0=pd.to_datetime('2020-1-1'),
+        y0=1,
+        x1=pd.to_datetime('2020-6-30'),
+        y1=1,
+        line=dict(
+            color='lightgrey',
+            width=1
+        )
+    ),
+    row=3, col=1
+)
+
+# Update layout
 fig_type.update_layout(
-    title_text="Component measurements of fist halfyears",
-    template="plotly_dark",
     width=800,
-    height=800
-    # legend_orientation="h",
-    # margin=dict(r=0, t=0, b=40, l=0)
-    # annotations=[
-    #     go.layout.Annotation(
-    #         text="Source: NOAA",
-    #         showarrow=False,
-    #         xref="paper",
-    #         yref="paper",
-    #         x=0,
-    #         y=0)
-    # ]
-    # legend=dict(
-    #     x=0,
-    #     y=1,
-    #     traceorder="normal",
-    #     font=dict(
-    #         family="sans-serif",
-    #         size=12,
-    #         color="white"
-    #     )
-    # )
+    height=1200,
+    title_text="<b> NO2 measurements of fist halfyears </b>",
+    template="plotly_dark",
+    showlegend=True,
+    legend=dict(
+        x=1,
+        y=1,
+        traceorder="normal",
+        font=dict(
+            family="sans-serif",
+            size=12,
+            color="white"
+        ),
+        bgcolor="black",
+        bordercolor="grey",
+        borderwidth=1
+    )
 )
 
-# Update yaxis properties
-# range=[40, 80] is a usable attribute
-# fig_type.update_layout(row=1, col=1, yaxis_tickformat="%")
-# fig_type.update_layout(row=2, col=1, yaxis_tickformat="%")
+# Add Lockdown label
+fig_type.update_xaxes(title="<b>Lockdown</b>", title_font=dict(color="red"))
 
+# Label and scale y axis
 fig_type.update_yaxes(
-    tickformat="%", row=1, col=1, secondary_y=True)
+    title_text="NO2 [µg/m³]", row=1, col=1)
 fig_type.update_yaxes(
-    tickformat="%", row=2, col=1, secondary_y=True)
-
+    title_text="NO2 [µg/m³]", row=2, col=1)
 fig_type.update_yaxes(
-    title_text="NO2 [µg/m³]", row=1, col=1, secondary_y=False)
-fig_type.update_yaxes(
-    title_text="NO2 [µg/m³]", row=2, col=1, secondary_y=False)
+    title_text="Relative Difference",
+    tickformat="%", range=[0, 2.3], row=3, col=1)
 
 fig_type.show()
+
+# Beobachtungen
+# 1. Hohe Prozentuelle Werte im vergleich zu den vorjahren im januar
+# 2. Der groteil des gaphs liegt unter der 100% marke
+# 3. Es ist ein Abfall zuer erkennen als die ausgangssperre eingetreten ist
+# 4. Es ist ein abfall von 14.01-19.01 zu vermerken
+# 5. Der Graph is stark schwankend
+# 6. Die Line für Background difference hat im Durschnitt einen höheren Wert als die Line für Traffic
+
+# Fakten
+# 1. Am 20.03 trat die Ausgangssperre in Kraft [5]
+# 2. Von 14.01-19.01 gab es außergewöhlinche Wetterbedingungen [3]
+# 3. Am 27.01 wurder der erste Corona Fall in deutschland bestätigt [4]
+# 4. Der Graph ist stark schwankend da wir nur daten für 4 Vorjahre als Grund Menge hatten
+
+# Schlussfolgerungen
+# 1. Die Ausgabssperre hat einen kurzeitigen Effekt auf die NO2 Konzentration
+# 2. Der Graph hät sich seit dem ersten Corona Fall in Deutschland unter der 100% marke auf, was einen klaren einfuss der Coronakriese zeit
+# 3. Da die Line für Background im Durschnitt einen höreren Wert als die Linie für Traffic hat, lässt sich schlussfolgern, dass Die Coronakriese einen stärkeren Einflüss auf die NO2 Konzentration bei Traffic stationen hat als auf Background stationen
 
 # %%
