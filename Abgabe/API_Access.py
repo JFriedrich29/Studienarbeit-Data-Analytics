@@ -148,7 +148,7 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
             df_single_component[component.name],
             how='left',
             left_index=True,
-            right_on="DT"
+            right_index=True
         )
 
     return df_multi_component
