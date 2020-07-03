@@ -7,6 +7,7 @@ from enum import Enum
 
 
 class ComponentEnum(Enum):
+    # All components the api provides data for
     PM10 = "1"
     CO = "2"
     O3 = "3"
@@ -36,14 +37,6 @@ def GetMetaData_Stations_All(date_from, date_to):
     raw_data = json.loads(response.text)
     station_data_dict = raw_data.get('stations')
 
-    # stations_dict = json_data['stations']
-    # components_dict = json_data['components']
-    # scopes_dict = json_data['scopes']
-    # xref_dict = json_data['xref']
-    # networks_dict = json_data['networks']
-    # networks_dict = json_data['networks']
-    # limits_dict = json_data['limits']
-
     # Parse into custom column names
     df_stations_meta = pd.DataFrame.from_dict(station_data_dict,
                                               orient="index",
@@ -65,19 +58,14 @@ def GetMetaData_Stations_All(date_from, date_to):
     df_stations_meta[conv_to_date_cols] = df_stations_meta[conv_to_date_cols].apply(
         pd.to_datetime, errors='coerce', axis=1)
 
-    # conv_to_str_cols = ["Network_Code", "Network_Name", "Settings_Long"]
-    # df_stations_meta[conv_to_str_cols] = df_stations_meta[conv_to_str_cols].apply(
-    #     pd.to_string, axis=1)
-
     return df_stations_meta
 
 
 def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from, date_to):
-    global __BASE_URL
-
-    # component_id = __component_ids[component]
+    # Resolve component enum info
     component_name = component.name
     component_id = component.value
+
     # Make api call
     response = requests.get(
         __BASE_URL + 'air_data/v2/measures/json',
@@ -99,47 +87,36 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     # Get raw station data from json
     raw_data = json.loads(response.text)
     station_data_dict = raw_data['data'].get(station_id)
+
+    # Inform caller
     if station_data_dict == None:
         raise Exception(f"Station {station_id} provides no data")
-        # start_time = pd.to_datetime(
-        #     date_from + ' 00:00:00', infer_datetime_format=True)
-        # end_time = pd.to_datetime(
-        #     date_to + ' 23:00:00', infer_datetime_format=True)
-        # df_single_component = pd.DataFrame(pd.date_range(
-        #     start_time, end_time, freq='h'), columns=["DT"])
-        # df_single_component.set_index("DT", inplace=True)
-        # df_single_component.reindex(
-        #     columns=["DT", "component id", "scope id",
-        #              component_name, "date end", "index"],
-        #     fill_value=np.NaN
-        # )
-        # print("Data missing for station: " + station_id)
 
-    else:  # Parse to dataframe
-        df_single_component = pd.DataFrame.from_dict(
-            station_data_dict,
-            orient="index",
-            columns=["component_id", "scope_id",
-                     component_name, "date_end", "index"]
-        )
+    # Parse to dataframe
+    df_single_component = pd.DataFrame.from_dict(
+        station_data_dict,
+        orient="index",
+        columns=["component_id", "scope_id",
+                 component_name, "date_end", "index"]
+    )
 
-        # Drop uninteresting columns
-        df_single_component.drop(
-            columns=["component_id", "scope_id", "date_end", "index"], inplace=True)
+    # Drop uninteresting columns
+    df_single_component.drop(
+        columns=["component_id", "scope_id", "date_end", "index"], inplace=True)
 
-        # Rename index and and convert it to column
-        df_single_component.index.rename("DT", inplace=True)
-        df_single_component.reset_index(drop=False, inplace=True)
+    # Rename index and and convert it to a column
+    df_single_component.index.rename("DT", inplace=True)
+    df_single_component.reset_index(drop=False, inplace=True)
 
-        # Add the station id as new column
-        df_single_component.insert(0, "STATION_ID", station_id)
+    # Add the station id as new column
+    df_single_component.insert(0, "STATION_ID", station_id)
 
     return df_single_component
 
 
 def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_from, date_to):
 
-    # Create empty df with index, that will be used to left join the single component data
+    # Create empty df with datetime-index, that will be used to left join the single component data
     start_time = pd.to_datetime(date_from + ' 00:00:00',
                                 infer_datetime_format=True)
     end_time = pd.to_datetime(date_to + ' 23:00:00',
@@ -148,6 +125,7 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
         start_time, end_time, freq='h'), columns=["DT"])
     df_multi_component.set_index("DT", inplace=True)
 
+    # Get measurements of each component
     for component in components:
         try:
             df_single_component = GetMeasurements_MeanPerHour_SingleComponent(
@@ -161,31 +139,16 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
                 len(df_multi_component.columns), component.name, np.NaN)
             continue
 
-        # Drop unnecessary columns
-        # df_single_component.drop(
-        #     ['component id', 'scope id', 'date end', 'index'],
-        #     inplace=True,
-        #     axis=1
-        # )
-
-        # Convert index to datetime
-        df_single_component = df_single_component.replace(
-            to_replace='24:00:00',
-            value="00:00:00",
-            regex=True
-        )
-        df_single_component.index = pd.to_datetime(df_single_component.index)
-        df_single_component.index.rename("DT", inplace=True)
+        # Set DT column as datetime index
+        df_single_component["DT"] = pd.to_datetime(df_single_component["DT"])
+        df_single_component.set_index("DT", inplace=True)
 
         # Left join single component data on datetime index
         df_multi_component = df_multi_component.merge(
             df_single_component[component.name],
             how='left',
             left_index=True,
-            right_index=True,
+            right_on="DT"
         )
-
-        # df_multi_component.rename(
-        #     {"VALUE": component}, axis=1, inplace=True)
 
     return df_multi_component
