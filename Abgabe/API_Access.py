@@ -100,29 +100,39 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     raw_data = json.loads(response.text)
     station_data_dict = raw_data['data'].get(station_id)
     if station_data_dict == None:
-        # raise Exception("Station provides no data for given parameters!")
-        start_time = pd.to_datetime(
-            date_from + ' 00:00:00', infer_datetime_format=True)
-        end_time = pd.to_datetime(
-            date_to + ' 23:00:00', infer_datetime_format=True)
-        df_single_component = pd.DataFrame(pd.date_range(
-            start_time, end_time, freq='h'), columns=["DT"])
-        df_single_component.set_index("DT", inplace=True)
-        df_single_component.reindex(
-            columns=["DT", "component id", "scope id",
-                     component_name, "date end", "index"],
-            fill_value=np.NaN
-        )
-        print("Data missing for station: " + station_id)
+        raise Exception(f"Station {station_id} provides no data")
+        # start_time = pd.to_datetime(
+        #     date_from + ' 00:00:00', infer_datetime_format=True)
+        # end_time = pd.to_datetime(
+        #     date_to + ' 23:00:00', infer_datetime_format=True)
+        # df_single_component = pd.DataFrame(pd.date_range(
+        #     start_time, end_time, freq='h'), columns=["DT"])
+        # df_single_component.set_index("DT", inplace=True)
+        # df_single_component.reindex(
+        #     columns=["DT", "component id", "scope id",
+        #              component_name, "date end", "index"],
+        #     fill_value=np.NaN
+        # )
+        # print("Data missing for station: " + station_id)
 
     else:  # Parse to dataframe
         df_single_component = pd.DataFrame.from_dict(
             station_data_dict,
             orient="index",
-            columns=["component id", "scope id",
-                     component_name, "date end", "index"]
+            columns=["component_id", "scope_id",
+                     component_name, "date_end", "index"]
         )
+
+        # Drop uninteresting columns
+        df_single_component.drop(
+            columns=["component_id", "scope_id", "date_end", "index"], inplace=True)
+
+        # Rename index and and convert it to column
         df_single_component.index.rename("DT", inplace=True)
+        df_single_component.reset_index(drop=False, inplace=True)
+
+        # Add the station id as new column
+        df_single_component.insert(0, "STATION_ID", station_id)
 
     return df_single_component
 
