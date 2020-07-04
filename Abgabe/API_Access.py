@@ -1,13 +1,21 @@
-### API ACCESS FUNCTIONS ###
+# -*- coding: utf-8 -*-
+"""API-Access-Module
+Contains wrapper functions for the german `'Umweltbundesamt Air Data'-API <https://www.umweltbundesamt.de/daten/luft/luftdaten/doc>`.
+"""
 import pandas as pd
 import requests
 import json
 import numpy as np
 from enum import Enum
 
+# Constants
+__BASE_URL = "https://www.umweltbundesamt.de/api/"
 
+
+"""
+Enumeration of all components the API provides data for.
+"""
 class ComponentEnum(Enum):
-    # All components the api provides data for
     PM10 = "1"
     CO = "2"
     O3 = "3"
@@ -15,10 +23,9 @@ class ComponentEnum(Enum):
     NO2 = "5"
 
 
-# Constants
-__BASE_URL = "https://www.umweltbundesamt.de/api/"
-
-
+"""
+Return measurement meta data for all german stations
+"""
 def GetMetaData_Stations_All(date_from, date_to):
     # Make api call
     response = requests.get(
@@ -30,8 +37,7 @@ def GetMetaData_Stations_All(date_from, date_to):
         }
     )
     if(response.status_code != 200):
-        print(
-            f"Failed meta data request: use {'measure'}, date_from {date_from}, date_to {date_to}")
+        print(f"Failed meta data request: use {'measure'}, date_from {date_from}, date_to {date_to}")
 
     # Get raw station data from json
     raw_data = json.loads(response.text)
@@ -40,16 +46,15 @@ def GetMetaData_Stations_All(date_from, date_to):
     # Parse into custom column names
     df_stations_meta = pd.DataFrame.from_dict(station_data_dict,
                                               orient="index",
-                                              columns=["ID", "Code", "Name", "Location", "Code_Name", "Construction_Date", "Deconstruction_Date", "Longtitude", "Latitude",
-                                                       "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name", "Settings_Long",
-                                                       "Settings_Short", "Type", "Street_Name", "Street_Number", "ZIP_Code"],
+                                              columns=["ID", "Code", "Name", "Location", "Code_Name", "Construction_Date", "Deconstruction_Date",
+                                              "Longtitude", "Latitude", "Network_ID", "Settings_ID", "Type_ID", "Network_Code", "Network_Name",
+                                              "Settings_Long", "Settings_Short", "Type", "Street_Name", "Street_Number", "ZIP_Code"],
                                               )
 
     df_stations_meta.set_index('ID', inplace=True)
 
     # Convert to numeric
-    conv_to_int_cols = ["Longtitude", "Latitude", "Network_ID", "Settings_ID",
-                        "Type_ID"]
+    conv_to_int_cols = ["Longtitude", "Latitude", "Network_ID", "Settings_ID","Type_ID"]
     df_stations_meta[conv_to_int_cols] = df_stations_meta[conv_to_int_cols].apply(
         pd.to_numeric, errors='coerce', axis=1)
 
@@ -61,6 +66,9 @@ def GetMetaData_Stations_All(date_from, date_to):
     return df_stations_meta
 
 
+"""
+Returns the hourly mean measurement values of a single component for a single stations between the specified datetime range.
+"""
 def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from, date_to):
     # Resolve component enum info
     component_name = component.name
@@ -81,8 +89,8 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
         }
     )
     if(response.status_code != 200):
-        print(
-            f"Failed measurement request: station_id {station_id}, component_id {component_id}, component_{component_name}, date_from {date_from}, date_to {date_to}")
+        print(f"Failed measurement request: station_id {station_id}, component_id {component_id}, component_{component_name}," +
+        f"date_from {date_from}, date_to {date_to}")
 
     # Get raw station data from json
     raw_data = json.loads(response.text)
@@ -96,13 +104,11 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     df_single_component = pd.DataFrame.from_dict(
         station_data_dict,
         orient="index",
-        columns=["component_id", "scope_id",
-                 component_name, "date_end", "index"]
+        columns=["component_id", "scope_id", component_name, "date_end", "index"]
     )
 
     # Drop uninteresting columns
-    df_single_component.drop(
-        columns=["component_id", "scope_id", "date_end", "index"], inplace=True)
+    df_single_component.drop(columns=["component_id", "scope_id", "date_end", "index"], inplace=True)
 
     # Rename index and and convert it to a column
     df_single_component.index.rename("DT", inplace=True)
@@ -114,15 +120,15 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
     return df_single_component
 
 
+"""
+Returns the hourly mean measurement values of multiple components for a single stations between the specified datetime range.
+"""
 def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_from, date_to):
 
     # Create empty df with datetime-index, that will be used to left join the single component data
-    start_time = pd.to_datetime(date_from + ' 00:00:00',
-                                infer_datetime_format=True)
-    end_time = pd.to_datetime(date_to + ' 23:00:00',
-                              infer_datetime_format=True)
-    df_multi_component = pd.DataFrame(pd.date_range(
-        start_time, end_time, freq='h'), columns=["DT"])
+    start_time = pd.to_datetime(date_from + ' 00:00:00', infer_datetime_format=True)
+    end_time = pd.to_datetime(date_to + ' 23:00:00', infer_datetime_format=True)
+    df_multi_component = pd.DataFrame(pd.date_range( start_time, end_time, freq='h'), columns=["DT"])
     df_multi_component.set_index("DT", inplace=True)
 
     # Get measurements of each component
@@ -132,11 +138,11 @@ def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_fro
                 station_id=station_id,
                 component=component,
                 date_from=date_from,
-                date_to=date_to)
+                date_to=date_to
+            )
         except:
-            # If station provides no data, Insert empty column named after component at the end of df
-            df_multi_component.insert(
-                len(df_multi_component.columns), component.name, np.NaN)
+            # If station provides no data, insert empty column named after component at the end of df
+            df_multi_component.insert(len(df_multi_component.columns), component.name, np.NaN)
             continue
 
         # Set DT column as datetime index
