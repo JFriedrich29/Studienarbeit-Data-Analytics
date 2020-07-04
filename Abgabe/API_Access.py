@@ -2,6 +2,8 @@
 """API-Access-Module
 Contains wrapper functions for the german `'Umweltbundesamt Air Data'-API <https://www.umweltbundesamt.de/daten/luft/luftdaten/doc>`.
 """
+
+# Imports
 import pandas as pd
 import requests
 import json
@@ -67,7 +69,8 @@ def GetMetaData_Stations_All(date_from, date_to):
 
 
 """
-Returns the hourly mean measurement values of a single component for a single stations between the specified datetime range.
+Returns the hourly mean measurement values of a single component for a single station between the specified datetime range.
+If the station provides no data an exception is thrown for the user to handle it properly.
 """
 def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from, date_to):
     # Resolve component enum info
@@ -121,7 +124,8 @@ def GetMeasurements_MeanPerHour_SingleComponent(station_id, component, date_from
 
 
 """
-Returns the hourly mean measurement values of multiple components for a single stations between the specified datetime range.
+Returns the hourly mean measurement values of multiple components for a single station between the specified datetime range.
+A station that provides no data for a concrete component will have a column filled with 'NaN'-values for it.
 """
 def GetMeasurements_MeanPerHour_MultiComponents(station_id, components, date_from, date_to):
 
